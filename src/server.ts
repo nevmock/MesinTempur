@@ -5,7 +5,7 @@ import BotEngine from './bot-engine';
 import { IncomingMessage, Server, ServerResponse } from 'node:http';
 
 const botEngine = new BotEngine({
-   headless: process.env.BOT_HEADLESS == 'false'
+   headless: true
 });
 
 botEngine.init().then(() => {

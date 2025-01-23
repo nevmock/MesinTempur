@@ -1,0 +1,8 @@
+### SCRAPE
+GET http://localhost:1337/api/v1/shopee-seller/product-ads
+Content-Type: application/json
+
+{
+    "startDefault": "1727715600",
+    "endDefault": "1730393999"
+}

@@ -14,7 +14,6 @@ import jsonfile from 'jsonfile';
 import path from 'path';
 import accounts from './configs/instagram/instagram-bot-account';
 import fs from 'fs';
-import { getSessionsPath } from './utils/sessions';
 
 class BotEngine implements IBotEngine {
    public static browser?: Browser;
@@ -23,7 +22,7 @@ class BotEngine implements IBotEngine {
    private options?: TBotInitOptions;
 
    constructor(options?: TBotInitOptions) {
-      this.options= options
+      this.options = options
    }
 
 
@@ -31,24 +30,27 @@ class BotEngine implements IBotEngine {
       try {
          puppeteer.use(StealthPlugin());
 
-         if (this.options) {
-            this.options?.useRecaptchaSolver ?
-               puppeteer.use(RecaptchaPlugin({
-                  provider: {
-                     id: '2captcha',
-                     token: process.env.RECAPTCHA_TOKEN, // REPLACE THIS WITH YOUR OWN 2CAPTCHA API KEY ⚡
-                  },
-                  visualFeedback: true, // colorize reCAPTCHAs (violet = detected, green = solved)
-               })) : undefined
-         }
+         // if (this.options) {
+         //    this.options?.useRecaptchaSolver ?
+         //       puppeteer.use(RecaptchaPlugin({
+         //          provider: {
+         //             id: '2captcha',
+         //             token: process.env.RECAPTCHA_TOKEN, // REPLACE THIS WITH YOUR OWN 2CAPTCHA API KEY ⚡
+         //          },
+         //          visualFeedback: true, // colorize reCAPTCHAs (violet = detected, green = solved)
+         //       })) : undefined
+         // }
 
          BotEngine.browser = await puppeteer.launch({
-            headless: this.options?.headless || false,
-            executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
+            headless: false,
+            executablePath: 'C:/Users/unomi/AppData/Local/Chromium/Application/chrome.exe',
+            // executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
+            // userDataDir: 'C:/Users/unomi/AppData/Local/Google/Chrome/User Data',
             // ignoreDefaultArgs: ['--disable-extensions'],
             args: [
-               '--use-gl=egl',
-               '--no-sandbox',
+               // '--use-gl=egl',
+               // '--no-sandbox',
+               // '--profile-directory=Default',
                // '--disable-setuid-sandbox',
                // 'google-chrome-stable',
                // '--force-device-scale-factor=0.5',
@@ -68,7 +70,7 @@ class BotEngine implements IBotEngine {
                // '--proxy-server=http://206.192.226.90',
             ],
             // Set true to debug browser
-            dumpio: false,
+            dumpio: true,
          });
 
          BotEngine.page = await BotEngine.browser.newPage();
@@ -84,8 +86,9 @@ class BotEngine implements IBotEngine {
          loggerUtils.logWithFile(`Bot Engine : ${e.message}`, 'error', 'error')
       }
 
+
    };
-   public getSessionsPath = (options: IBotEngineOptions): string => {
+   public static getSessionsPath = (options: IBotEngineOptions): string => {
       return path.join(
          `./src/sessions/${options.platform}/${accounts[options.botAccountIndex]!.username}.json`
       )
@@ -94,14 +97,35 @@ class BotEngine implements IBotEngine {
       try {
          const client = await BotEngine.page?.target().createCDPSession();
          if (client) {
+            // Mengambil semua cookies
             const cookies = (await client.send('Network.getAllCookies')).cookies;
-            // const cookiesObject = await this.page._client.send(
-            //    'Network.getAllCookies',
-            // );
 
+            // Menyimpan cookies dalam file JSON
             jsonfile.writeFileSync(
                path.join(`./src/sessions/${writeCookiesOptions.platform}/${accounts[writeCookiesOptions.botAccountIndex]!.username}.json`),
                cookies,
+               { spaces: 2 },
+            );
+
+            // Jika kamu ingin juga mengambil sessionStorage atau localStorage
+            // Mendapatkan data dari localStorage atau sessionStorage
+            const localStorageData = await client.send('Runtime.evaluate', {
+               expression: 'window.localStorage',
+            });
+            const sessionStorageData = await client.send('Runtime.evaluate', {
+               expression: 'window.sessionStorage',
+            });
+
+            // Menyimpan localStorage dan sessionStorage (jika perlu)
+            jsonfile.writeFileSync(
+               path.join(`./src/sessions/${writeCookiesOptions.platform}/${accounts[writeCookiesOptions.botAccountIndex]!.username}_localStorage.json`),
+               localStorageData.result,
+               { spaces: 2 },
+            );
+
+            jsonfile.writeFileSync(
+               path.join(`./src/sessions/${writeCookiesOptions.platform}/${accounts[writeCookiesOptions.botAccountIndex]!.username}_sessionStorage.json`),
+               sessionStorageData.result,
                { spaces: 2 },
             );
          }
@@ -109,18 +133,19 @@ class BotEngine implements IBotEngine {
          loggerUtils.logWithFile(`Write Cookies : ${error.message}`, 'error', 'error');
       }
    };
+
    public static hasSession = async (hasSessionOption: THasSessionOption): Promise<boolean> => {
       try {
          loggerUtils.logWithFile(
-            `Get sessions file : ${getSessionsPath(hasSessionOption)}`,
+            `Get sessions file : ${this.getSessionsPath(hasSessionOption)}`,
          );
          const previousSession = fs.existsSync(
-            path.join(getSessionsPath(hasSessionOption))
+            path.join(this.getSessionsPath(hasSessionOption))
          );
 
          if (previousSession) {
-            loggerUtils.logWithFile(`Session file exist`);
-            const cookiesArr = jsonfile.readFileSync(getSessionsPath(hasSessionOption));
+            loggerUtils.logWithFile(`Session file exist : ${path.join(this.getSessionsPath(hasSessionOption))}`);
+            const cookiesArr = jsonfile.readFileSync(this.getSessionsPath(hasSessionOption));
 
             // JSON.parse(JSON.stringify(cookiesArr));
 
