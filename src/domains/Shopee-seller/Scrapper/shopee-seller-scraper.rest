@@ -3,6 +3,16 @@ GET http://localhost:1337/api/v1/shopee-seller/product-ads
 Content-Type: application/json
 
 {
+    //tanggal 17 2025
     "startDefault": "1727715600",
     "endDefault": "1730393999"
+
+
+    //tanggal 16 2025
+    //"startDefault": "1736960400",
+    //"endDefault": "1737046799"
+
+    //tanggal 15 januari 2025
+    //"startDefault": "1736874000",
+    //"endDefault": "1736960399"
 }
