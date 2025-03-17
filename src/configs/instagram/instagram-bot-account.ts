@@ -2,8 +2,8 @@ import Taccount from '../../interfaces/instagram-account-interface';
 const accounts: Array<Taccount> = [
    {
       //[0] l 30/12 - please wait
-      username: 'topiwig',
-      password: 'Raptor202022',
+      username: 'amk',
+      password: 'Jkt123$.',
       status: 'active',
    },
    // {
