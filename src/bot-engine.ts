@@ -42,15 +42,15 @@ class BotEngine implements IBotEngine {
          // }
 
          BotEngine.browser = await puppeteer.launch({
-            headless: true,
-            executablePath: 'C:/Users/unomi/AppData/Local/Chromium/Application/chrome.exe',
-            // executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
-            // userDataDir: 'C:/Users/unomi/AppData/Local/Google/Chrome/User Data',
+            headless: false,
+            // executablePath: 'C:/Users/unomi/AppData/Local/Chromium/Application/chrome.exe',
+            executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
+            userDataDir: 'C:/Users/unomi/AppData/Local/Google/Chrome/User Data',
             // ignoreDefaultArgs: ['--disable-extensions'],
             args: [
                // '--use-gl=egl',
                // '--no-sandbox',
-               // '--profile-directory=Default',
+               '--profile-directory=Default',
                // '--disable-setuid-sandbox',
                // 'google-chrome-stable',
                // '--force-device-scale-factor=0.5',
@@ -96,6 +96,7 @@ class BotEngine implements IBotEngine {
    public static writeCookies = async (writeCookiesOptions: TWriteCookiesOptions): Promise<void> => {
       try {
          const client = await BotEngine.page?.target().createCDPSession();
+         console.info(client)
          if (client) {
             // Mengambil semua cookies
             const cookies = (await client.send('Network.getAllCookies')).cookies;

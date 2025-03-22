@@ -80,7 +80,7 @@ class ShopeeSellerRepository {
                     start_time: parseInt(String(start_time)),
                     end_time: parseInt(String(end_time)),
                     offset: 0,
-                    limit: 1546
+                    limit: 20
                 }
             };
     
@@ -195,12 +195,13 @@ class ShopeeSellerRepository {
                 },
                 timeout: 60000,
             };
-    
+            console.info(options);
             const result = await axios(options);
             console.info('Product ads fetched successfully:', result.data);
             return result.data;
+            
         } catch (error: any) {
-            console.error('Error fetching product ads:', error?.message || error);
+            console.error(error);
             throw new Error(error);
         }
     }; 

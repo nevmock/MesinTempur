@@ -58,6 +58,11 @@ class ShopeeSellerScrapperServices {
     public getProductAds = async (startDefault: string, endDefault: any): Promise<any> => {
         try {
             const targetUrl = `https://seller.shopee.co.id/portal/marketing/pas/index?source_page_id=1&from=${startDefault}&to=${endDefault}&type=new_cpc_homepage&group=custom`;
+            await BotEngine.page?.goto(targetUrl, { waitUntil: 'load' });
+            await delay(30000);
+            const botAccountIndex = 0;
+            const platform = 'shopee_seller';
+            await BotEngine.writeCookies({ platform, botAccountIndex });
             const url = new URL(targetUrl);
             const fromTimestamp = Number(url.searchParams.get('from'));
             const toTimestamp = Number(url.searchParams.get('to'));
@@ -71,6 +76,7 @@ class ShopeeSellerScrapperServices {
             if (hasSession) {
                 await BotEngine.page?.goto(targetUrl, { waitUntil: 'load' });
                 await delay(5000);
+                
             }
     
             console.log(`Extracted from: ${startDefault}, to: ${endDefault}`);
