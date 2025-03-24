@@ -526,6 +526,7 @@ class InstagramScraperServices {
             title: caption,
             content: '-',
             platform: 'instagram',
+            
          });
       }
    };

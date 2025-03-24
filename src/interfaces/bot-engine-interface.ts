@@ -5,5 +5,4 @@ export interface IBotEngineOptions {
 
 export interface IBotEngine {
    init(): Promise<void>;
-   getSessionsPath(options: IBotEngineOptions): string;
 }
