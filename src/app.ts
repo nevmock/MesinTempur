@@ -19,6 +19,7 @@ import BotEngine from './bot-engine';
 import { IncomingMessage, Server, ServerResponse } from 'node:http';
 import shopeeSellerScraperRoutes from './domains/shopee-seller/Scrapper/shopee-seller-scraper-routes.js';
 import instagramRapidRoutes from './domains/Instagram/RapidAPI/instagram-rapid-routes';
+import tiktokRapidRoutes from './domains/TikTok/RapidAPI/tiktok-rapid-routes';
 
 class OurApp {
    private app?: Application;
@@ -53,6 +54,7 @@ class OurApp {
    private setupRoute(): void {
       this.app!.use('/api/v1/instagram/scraper', instagramScraperRoutes);
       this.app!.use('/api/v1/instagram/rapid', instagramRapidRoutes);
+      this.app!.use('/api/v1/tiktok/rapid', tiktokRapidRoutes);
       this.app!.use('/api/v1/news', newsScraperRoutes);
       this.app!.use('/api/v1/shopee-seller', shopeeSellerScraperRoutes);
    }
