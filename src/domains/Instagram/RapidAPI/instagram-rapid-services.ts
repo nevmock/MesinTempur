@@ -11,13 +11,13 @@ import delay from '../../../utils/delay';
 import moment, { Moment } from 'moment';
 import errorCapture from '../../../utils/errorCapture';
 import BotEngine from '../../../bot-engine';
-import InstagramScraperRepository from './instagram-scraper-repository';
+import InstagramRapidRepository from './instagram-rapid-repository';
 import { getDiffTime } from '../../../utils/feeds';
 import { createObjectCsvWriter } from 'csv-writer';
 import OurApp from '../../../app';
 import { TChallengeValidateOptions } from '../../../types/bot-engine-types';
 
-class InstagramScraperServices {
+class InstagramRapidServices {
    private BASE_URL: string = 'https://instagram.com/';
    private botAccountIndex: number = 0;
    private botAccount: Taccount = accounts[this.botAccountIndex]!;
@@ -25,10 +25,10 @@ class InstagramScraperServices {
    private userAgent: string =
       'Mozilla/5.0 (iPhone; CPU iPhone OS 12_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 105.0.0.11.118 (iPhone11,8; iOS 12_3_1; en_US; en-US; scale=2.00; 828x1792; 165586599)';
 
-   private repository: InstagramScraperRepository ;
+   private repository: InstagramRapidRepository ;
 
    constructor() {
-      this.repository = new InstagramScraperRepository();
+      this.repository = new InstagramRapidRepository();
    }
 
    public challengeValidate = async (): Promise<void> => {
@@ -1749,4 +1749,4 @@ class InstagramScraperServices {
 
 }
 
-export default InstagramScraperServices;
+export default InstagramRapidServices;
