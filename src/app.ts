@@ -17,6 +17,8 @@ import { Browser, Page } from 'puppeteer';
 import newsScraperRoutes from './domains/news/Scraper/news-scraper-routes';
 import BotEngine from './bot-engine';
 import { IncomingMessage, Server, ServerResponse } from 'node:http';
+import shopeeSellerScraperRoutes from './domains/shopee-seller/Scrapper/shopee-seller-scraper-routes.js';
+import instagramRapidRoutes from './domains/Instagram/RapidAPI/instagram-rapid-routes';
 
 class OurApp {
    private app?: Application;
@@ -49,9 +51,12 @@ class OurApp {
    }
 
    private setupRoute(): void {
-      this.app!.use('/api/v1/instagram', instagramScraperRoutes);
+      this.app!.use('/api/v1/instagram/scraper', instagramScraperRoutes);
+      this.app!.use('/api/v1/instagram/rapid', instagramRapidRoutes);
       this.app!.use('/api/v1/news', newsScraperRoutes);
+      this.app!.use('/api/v1/shopee-seller', shopeeSellerScraperRoutes);
    }
+
 
    private configureAssets() {
       this.app!.use(express.static(path.join(__dirname, '../public')));

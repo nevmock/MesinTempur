@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import instagramScraperServices from './instagram-scraper-services';
+import instagramScraperServices from './instagram-rapid-services';
 import moment, { Moment } from 'moment';
 import delay from '../../../utils/delay';
 import { createObjectCsvWriter } from 'csv-writer';
@@ -8,10 +8,10 @@ import path from 'path';
 import { Sequelize, QueryTypes } from 'sequelize';
 import fs from 'fs';
 import BotEngine from '../../../bot-engine';
-import InstagramScraperRepository from './instagram-scraper-repository';
+import InstagramRapidRepository from './instagram-rapid-repository';
 import { getDiffTime } from '../../../utils/feeds';
 
-class InstagramScraperController {
+class InstagramRapidController {
 
    private failedUserPath: string = path.join(
       './failed_user/' + moment().format('YYYYMMDD') + '.json',
@@ -932,4 +932,4 @@ class InstagramScraperController {
    // };
 }
 
-export default new InstagramScraperController();
+export default new InstagramRapidController();

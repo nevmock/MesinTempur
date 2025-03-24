@@ -65,7 +65,6 @@ class NewsRepository implements INewsRepository {
 
       $(articles).each((id: number, e: BasicAcceptedElems<any>) => {
          const link = $(e)?.find('a[href^="./article"]')?.attr('href')?.replace('./', 'https://news.google.com/') || $(e)?.find('a[href^="./read"]')?.attr('href')?.replace('./', 'https://news.google.com/') || false
-         console.info(link)
          link && urlChecklist.push(link);
          const srcset = $(e).find('figure').find('img').attr('srcset')?.split(' ');
          const image = srcset && srcset.length
@@ -75,10 +74,11 @@ class NewsRepository implements INewsRepository {
          const title = this.googleNewsUtils.getTitle($, e, articleType);
          const mainArticle = {
             title,
-            datetime: $(e)?.find('div:last-child time')?.attr('datetime') ? moment($(e)?.find('div:last-child time')?.attr('datetime')) : null,
+            dateTime: $(e)?.find('div:last-child time')?.attr('datetime') ? moment($(e)?.find('div:last-child time')?.attr('datetime')).toDate() : null,
             mediaName: $(e).find('div[data-n-tid]').text() || false,
             sourceUrl: link,
             content: '-',
+            platform: 'Google News'
             // image: image?.startsWith("/") ? `https://news.google.com${image}` : image,
             // time: $(this).find('div:last-child time').text() || false,
             // articleType
@@ -89,7 +89,7 @@ class NewsRepository implements INewsRepository {
 
          console.info(`--------------------------------`);
          console.info(`title : ${mainArticle.title}`)
-         console.info(`datetime : ${mainArticle.datetime}`)
+         console.info(`dateTime : ${mainArticle.dateTime}`)
          console.info(`mediaName : ${mainArticle.mediaName}`)
          console.info(`sourceUrl : ${mainArticle.sourceUrl}`)
          console.info(`content : ${mainArticle.content}`)

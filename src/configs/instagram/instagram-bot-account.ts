@@ -1,5 +1,11 @@
 import Taccount from '../../interfaces/instagram-account-interface';
 const accounts: Array<Taccount> = [
+   {
+      //[0] l 30/12 - please wait
+      username: 'amk',
+      password: 'Jkt123$.',
+      status: 'active',
+   },
    // {
    //    //[5]  l 17/12
    //    username: 'agenselotips',
@@ -12,18 +18,18 @@ const accounts: Array<Taccount> = [
    //    password: 'satuEnamLimaDelapan213',
    //    status: 'active',
    // },
-   {
+   // {
       //[0] l 30/12 - please wait
-      username: 'sebentarlagimaghrib',
-      password: 'satuEnamLimaTiga213',
-      status: 'active',
-   },
-   {
-      //[0] l 30/12 - please wait
-      username: 'inisudahsore',
-      password: 'satuEnamTujuhDelapan213',
-      status: 'active',
-   },
+      // username: 'sebentarlagimaghrib',
+      // password: 'satuEnamLimaTiga213',
+      // status: 'active',
+   // },
+   // {
+   //    //[0] l 30/12 - please wait
+   //    username: 'inisudahsore',
+   //    password: 'satuEnamTujuhDelapan213',
+   //    status: 'active',
+   // },
 
    // {
    //    //[0] l 30/12 - please wait

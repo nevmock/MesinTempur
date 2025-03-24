@@ -1,27 +1,27 @@
 import BaseRoutes from '../../../base_claseses/base-routes';
 import tryCatch from '../../../utils/tryCatcher';
-import instagramScraperController from './instagram-scraper-controller';
+import InstagramRapidController from './instagram-rapid-controller';
 
-class InstagramScraperRoutes extends BaseRoutes {
+class InstagramRapidRoutes extends BaseRoutes {
    public routes(): void {
       this.router.get(
          '/scrape',
-         tryCatch(instagramScraperController.dailyScrape),
+         tryCatch(InstagramRapidController.dailyScrape),
       );
 
       this.router.get(
          '/comments-to-csv',
-         tryCatch(instagramScraperController.commentsToCsv),
+         tryCatch(InstagramRapidController.commentsToCsv),
       );
 
       this.router.get(
          '/scrape-failed-user',
-         tryCatch(instagramScraperController.dailyScrape),
+         tryCatch(InstagramRapidController.dailyScrape),
       );
 
       this.router.get(
          '/research',
-         tryCatch(instagramScraperController.research),
+         tryCatch(InstagramRapidController.research),
       );
       // this.router.get(
       //    '/url-type',
@@ -34,4 +34,4 @@ class InstagramScraperRoutes extends BaseRoutes {
    }
 }
 
-export default new InstagramScraperRoutes().router;
+export default new InstagramRapidRoutes().router;
