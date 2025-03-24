@@ -2,6 +2,7 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import jsonfile from 'jsonfile';
 import 'dotenv/config';
+import { toCamel, toSnake } from 'snake-camel';
 import loggerUtils from '../../../utils/logger';
 import accounts from '../../../configs/instagram/instagram-bot-account';
 import path from 'path';
@@ -18,15 +19,17 @@ import NewsRepository from './news-repository';
 import BotEngine from '../../../bot-engine';
 import OurApp from '../../../app';
 import { TSaveSpiderRaw } from '../../../types/news-scraper-types';
+import BaseError from '../../../base_claseses/base-error';
+import { format } from 'winston';
 
 class NewsScraperServices {
    private repository = new NewsRepository();
 
-   public saveToSpiderRaw = async (payload: TSaveSpiderRaw): Promise<void> => {
+   public saveToNews = async (payload: TSaveSpiderRaw): Promise<void> => {
       const alreadySave: boolean = await this.isNewsAlreadySaved(payload.sourceUrl);
 
       if (!alreadySave) {
-         await db.tbl_spider_raw.create({
+         await db.news.create({
             date_time: payload.datetime,
             media_name: payload.mediaName,
             source_url: payload.sourceUrl,
@@ -38,7 +41,7 @@ class NewsScraperServices {
    };
 
    public isNewsAlreadySaved = async(sourceUrl: string) => {
-      const newsData = await db.tbl_spider_raw.findAll({
+      const newsData = await db.news.findAll({
          where: {
             source_url: {
                [Op.like]: `%${sourceUrl}`,
@@ -52,14 +55,35 @@ class NewsScraperServices {
 
    public scrapeGoogleNews_v2 = async(searchKey: string): Promise<void> => {
       const response = await this.repository.getGoogleNews(searchKey)
-      const dateCriteria = moment().subtract(1, 'days');
+      // const dateCriteria = moment().subtract(1, 'days');
 
-      for (const news of response) {
-         if (news.datetime.year() === dateCriteria.year() && news.datetime.month() === dateCriteria.month() && news.datetime.day() === dateCriteria.day()) {
-            await this.saveToSpiderRaw(news)
-         }
+      const formattedResponse = { data: toSnake({ response }) as any };
+      console.info(formattedResponse.data)
+      try {
+         await this.saveBulkToNews(formattedResponse.data.response)
+      } catch (e: any) {
+         throw new BaseError(500, 'INTERNAL_SERVER_ERROR', e.toString())
       }
+      //
+      // for (const news of response) {
+      //    try {
+      //       await this.saveToNews(news)
+      //    } catch (e: any) {
+      //       console.error(e)
+      //       throw new BaseError(500, 'INTERNAL_SERVER_ERROR', e.toString())
+      //    }
+      //    // if (news.datetime.year() === dateCriteria.year() && news.datetime.month() === dateCriteria.month() && news.datetime.day() === dateCriteria.day()) {
+      //    //    await this.saveToNews(news)
+      //    // }
+      // }
    }
+
+   public saveBulkToNews = async (data: any): Promise<void> => {
+      await db.news.bulkCreate(data, {
+         updateOnDuplicate: ["title"],
+      });
+   }
+
    public scrapeGoogleNews_v1 = async(searchKey: string): Promise<void> => {
       // const response = await this.repository.getGoogleNews(searchKey)
       // const eg = {
