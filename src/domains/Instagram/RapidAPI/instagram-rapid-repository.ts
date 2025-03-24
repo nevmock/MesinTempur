@@ -5,7 +5,7 @@ import { Browser, Page } from 'puppeteer';
 import BotEngine from '../../../bot-engine';
 import OurApp from '../../../app';
 
-class InstagramRepository implements IInstagramRepository {
+class InstagramRapidRepository {
    private DEFAULT_FEED_PAGE_SIZE: number = 12;
    private DEFAULT_LIKE_PAGE_SIZE: number = 100;
    private DEFAULT_COMMENT_SIZE: number = 50;
@@ -292,4 +292,4 @@ class InstagramRepository implements IInstagramRepository {
    };
 }
 
-export default InstagramRepository;
+export default InstagramRapidRepository;

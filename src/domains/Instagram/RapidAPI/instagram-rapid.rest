@@ -1,0 +1,48 @@
+### RESEARCH
+GET http://localhost:1337/api/v1/instagram/research
+Content-Type: application/json
+
+{
+  "tagName": "july",
+  "maxPage": 100,
+  "subtract": 1
+}
+
+### SCRAPE
+GET http://localhost:1337/api/v1/instagram/scrape
+Content-Type: application/json
+
+{
+   "subtract": 2
+}
+
+### COMMENTS TO CSV
+GET http://localhost:1337/api/v1/instagram/comments-to-csv
+Content-Type: application/json
+
+{
+   "monthWanted": "10",
+   "yearWanted": "2024"
+}
+
+### SCRAPE FAIL USER LIST (IN DEV)
+GET http://localhost:1337/api/v1/tiktok/scrape-failed-user
+Content-Type: application/json
+
+### SCRAPE URL & Type
+GET http://localhost:1337/api/v1/instagram/url-type
+Content-Type: application/json
+
+{
+   "username": "surabaya",
+   "monthWanted": "07",
+   "yearWanted": "2022"
+}
+
+### SCRAPE URL & Type By URL
+GET http://localhost:1337/api/v1/instagram/url-type-by-url
+Content-Type: application/json
+
+### CRAWLING
+GET http://localhost:1337/api/v1/instagram/crawling
+Content-Type: application/json
