@@ -173,8 +173,8 @@ class InstagramRapidRepository {
             if (!posts || posts.length === 0) break;
 
             for (const post of posts) {
-               const isPinned = post.is_top ? 1 : 0;
-               const postDate = new Date(post.create_time * 1000).getTime();
+               const isPinned = post.is_pinned ? 1 : 0;
+               const postDate = new Date(post.taken_at * 1000).getTime();
 
                if (isPinned || postDate < endDateTimestamp) continue;
 
