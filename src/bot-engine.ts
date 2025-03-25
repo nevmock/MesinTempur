@@ -50,7 +50,7 @@ class BotEngine implements IBotEngine {
             args: [
                // '--use-gl=egl',
                // '--no-sandbox',
-               '--profile-directory=Default',
+               // '--profile-directory=Default',
                // '--disable-setuid-sandbox',
                // 'google-chrome-stable',
                // '--force-device-scale-factor=0.5',
@@ -70,7 +70,7 @@ class BotEngine implements IBotEngine {
                // '--proxy-server=http://206.192.226.90',
             ],
             // Set true to debug browser
-            dumpio: true,
+            // dumpio: true,
          });
 
          BotEngine.page = await BotEngine.browser.newPage();
@@ -96,7 +96,6 @@ class BotEngine implements IBotEngine {
    public static writeCookies = async (writeCookiesOptions: TWriteCookiesOptions): Promise<void> => {
       try {
          const client = await BotEngine.page?.target().createCDPSession();
-         console.info(client)
          if (client) {
             // Mengambil semua cookies
             const cookies = (await client.send('Network.getAllCookies')).cookies;

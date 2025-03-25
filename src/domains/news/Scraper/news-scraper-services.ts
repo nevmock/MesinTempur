@@ -3,25 +3,11 @@ import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import jsonfile from 'jsonfile';
 import 'dotenv/config';
 import { toCamel, toSnake } from 'snake-camel';
-import loggerUtils from '../../../utils/logger';
-import accounts from '../../../configs/instagram/instagram-bot-account';
-import path from 'path';
-import fs from 'fs';
-import Taccount from '../../../interfaces/instagram-account-interface';
-import logger from '../../../utils/logger';
 import db from '../../../models';
 import { Op } from 'sequelize';
-import delay from '../../../utils/delay';
-import moment, { Moment } from 'moment';
-import RecaptchaPlugin from 'puppeteer-extra-plugin-recaptcha';
-import errorCapture from '../../../utils/errorCapture';
-import NewsRepository from './news-repository';
-import BotEngine from '../../../bot-engine';
-import OurApp from '../../../app';
+import NewsRepository from './news-scraper-repository';
 import { TSaveSpiderRaw } from '../../../types/news-scraper-types';
 import BaseError from '../../../base_claseses/base-error';
-import { format } from 'winston';
-
 class NewsScraperServices {
    private repository = new NewsRepository();
 

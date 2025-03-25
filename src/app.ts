@@ -1,4 +1,5 @@
 import express, { Application } from 'express';
+import { connectDB } from './configs/shopee/mongodb-connection';
 import errorHandler from './middlewares/error-handler-middleware.js';
 import path from 'path';
 import morgan from 'morgan';
@@ -10,12 +11,7 @@ import apicache from 'apicache';
 import longjohn from 'longjohn';
 import bodyParser from 'body-parser';
 import instagramScraperRoutes from './domains/Instagram/Scraper/instagram-scraper-routes.js';
-import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import RecaptchaPlugin from 'puppeteer-extra-plugin-recaptcha';
-import { Browser, Page } from 'puppeteer';
 import newsScraperRoutes from './domains/news/Scraper/news-scraper-routes';
-import BotEngine from './bot-engine';
 import { IncomingMessage, Server, ServerResponse } from 'node:http';
 import shopeeSellerScraperRoutes from './domains/shopee-seller/Scrapper/shopee-seller-scraper-routes.js';
 import instagramRapidRoutes from './domains/Instagram/RapidAPI/instagram-rapid-routes';
@@ -72,6 +68,14 @@ class OurApp {
 
    public start() {
       longjohn.async_trace_limit = 10;
+
+      connectDB().then((v) => {
+         console.info("Connected to MongoDB");
+      }).catch((err) => {
+         console.error('❌ Failed to connect to MongoDB:', err);
+         process.exit(1);
+      });
+
       return this.app?.listen(this.port, () => {
          loggerUtils.logger().info(`Application running on port ${this.port}`);
       });
