@@ -8,7 +8,18 @@ class TikTokRapidRoutes extends BaseRoutes {
             '/getDataUser',
             tryCatch(TikTokRapidController.getDataUser),
         );
+
+        this.router.get(
+            '/getDataPost',
+            tryCatch(TikTokRapidController.getDataPost),
+        );
+
+        this.router.get(
+            '/getUserAndPostData',
+            tryCatch(TikTokRapidController.getUserAndPostData),
+        );
     }
+    
 }
 
 export default new TikTokRapidRoutes().router;

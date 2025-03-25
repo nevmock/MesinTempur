@@ -5,3 +5,19 @@ Content-Type: application/json
 {
     "kategori" : "disparbud"
 }
+
+###
+GET http://localhost:1337/api/v1/tiktok/rapid/getDataPost
+Content-Type: application/json
+
+{
+    "kategori" : "disparbud"
+}
+
+###
+GET http://localhost:1337/api/v1/tiktok/rapid/getUserAndPostData
+Content-Type: application/json
+
+{
+    "kategori" : "kdm_media"
+}
