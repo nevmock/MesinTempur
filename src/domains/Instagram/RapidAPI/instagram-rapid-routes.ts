@@ -13,6 +13,11 @@ class InstagramRapidRoutes extends BaseRoutes {
          '/getDataPost',
          tryCatch(InstagramRapidController.getDataPost),
       );
+
+      this.router.get(
+         '/getUserAndPostData',
+         tryCatch(InstagramRapidController.getUserAndPostData),
+      );
    }
 
 }

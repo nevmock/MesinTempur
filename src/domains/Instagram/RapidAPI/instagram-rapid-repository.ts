@@ -50,14 +50,14 @@ class InstagramRapidRepository {
       }
 
       let paginationToken: string | null = null;
-      let morePosts = true;
+      let hasMore = true;
       let pageCount = 0;
 
       const endDate = new Date();
       endDate.setDate(endDate.getDate() - 2);
       const endDateTimestamp = endDate.getTime();
 
-      while (morePosts) {
+      while (hasMore) {
          const getPost: AxiosRequestConfig = {
             method: 'GET',
             url: 'https://instagram-scraper-api2.p.rapidapi.com/v1/posts',
@@ -98,7 +98,7 @@ class InstagramRapidRepository {
             }
 
             paginationToken = response.data?.pagination_token || null;
-            if (!paginationToken) morePosts = false;
+            if (!paginationToken) hasMore = false;
             pageCount++;
             console.info(`Page count: ${pageCount}`);
 
@@ -107,6 +107,94 @@ class InstagramRapidRepository {
             break;
          }
       }
+   }
+
+   public async getUserAndPostData(username: string | null) {
+      if (!username) {
+         console.warn("Username is required for getUserAndPostData");
+         return [];
+      }
+
+      const hasilGabungan: any[] = [];
+
+      // Step 1: Ambil user info
+      let userInfo: any = null;
+      try {
+         const response = await axios.request({
+            method: 'GET',
+            url: 'https://instagram-scraper-api2.p.rapidapi.com/v1/info',
+            params: {
+               username_or_id_or_url: username,
+               include_about: 'true',
+               url_embed_safe: 'true'
+            },
+            headers: {
+               'X-RapidAPI-Key': process.env.RAPIDAPI_IG_KEY!,
+               'X-RapidAPI-Host': process.env.RAPIDAPI_IG_HOST!
+            }
+         });
+
+         userInfo = response.data?.data;
+         if (!userInfo) {
+            console.warn(`User info not found for ${username}`);
+            return [];
+         }
+
+      } catch (err: any) {
+         console.error(`Gagal ambil user info untuk ${username}:`, err.message);
+         return [];
+      }
+
+      // Step 2: Ambil data postingan
+      let paginationToken: string | null = null;
+      let hasMore = true;
+
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() - 2);
+      const endDateTimestamp = endDate.getTime();
+
+      while (hasMore) {
+         try {
+            const response: AxiosRequestConfig = await axios.request({
+               method: 'GET',
+               url: 'https://instagram-scraper-api2.p.rapidapi.com/v1/posts',
+               params: {
+                  username_or_id_or_url: username,
+                  url_embed_safe: 'true',
+                  pagination_token: paginationToken || null
+               },
+               headers: {
+                  'X-RapidAPI-Key': process.env.RAPIDAPI_IG_KEY!,
+                  'X-RapidAPI-Host': process.env.RAPIDAPI_IG_HOST!
+               }
+            });
+
+            const posts = response.data?.data?.posts;
+            if (!posts || posts.length === 0) break;
+
+            for (const post of posts) {
+               const isPinned = post.is_top ? 1 : 0;
+               const postDate = new Date(post.create_time * 1000).getTime();
+
+               if (isPinned || postDate < endDateTimestamp) continue;
+
+               hasilGabungan.push({
+                  username,
+                  ...userInfo,
+                  ...post
+               });
+            }
+
+            paginationToken = response.data?.pagination_token || null;
+            if (!paginationToken) hasMore = false;
+
+         } catch (err: any) {
+            console.error(`Gagal ambil video untuk ${username}:`, err.message);
+            break;
+         }
+      }
+
+      return hasilGabungan;
    }
 
    public async getDataComment() {
