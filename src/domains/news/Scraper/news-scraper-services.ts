@@ -15,7 +15,7 @@ import delay from '../../../utils/delay';
 import moment, { Moment } from 'moment';
 import RecaptchaPlugin from 'puppeteer-extra-plugin-recaptcha';
 import errorCapture from '../../../utils/errorCapture';
-import NewsRepository from './news-repository';
+import NewsRepository from './news-scraper-repository';
 import BotEngine from '../../../bot-engine';
 import OurApp from '../../../app';
 import { TSaveSpiderRaw } from '../../../types/news-scraper-types';
