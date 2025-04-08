@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import InstagramRapidServices from './instagram-rapid-services';
 
 class InstagramRapidController {
-
    private instagramRapidServices = new InstagramRapidServices()
 
    public getDataUser = async (

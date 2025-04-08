@@ -23,10 +23,9 @@ class InstagramRapidRepository {
 
       const getUser = {
          method: 'GET',
-         url: 'https://instagram-scraper-api2.p.rapidapi.com/v1/info',
+         url: 'https://social-api4.p.rapidapi.com/v1/info',
          params: {
             username_or_id_or_url: username,
-            include_about: 'true',
             url_embed_safe: 'true'
          },
          headers: {
@@ -60,7 +59,7 @@ class InstagramRapidRepository {
       while (hasMore) {
          const getPost: AxiosRequestConfig = {
             method: 'GET',
-            url: 'https://instagram-scraper-api2.p.rapidapi.com/v1/posts',
+            url: 'https://social-api4.p.rapidapi.com/v1/posts',
             params: {
                username_or_id_or_url: username,
                url_embed_safe: 'true',
@@ -122,7 +121,7 @@ class InstagramRapidRepository {
       try {
          const response = await axios.request({
             method: 'GET',
-            url: 'https://instagram-scraper-api2.p.rapidapi.com/v1/info',
+            url: 'https://social-api4.p.rapidapi.com/v1/info',
             params: {
                username_or_id_or_url: username,
                include_about: 'true',
@@ -157,7 +156,7 @@ class InstagramRapidRepository {
          try {
             const response: AxiosRequestConfig = await axios.request({
                method: 'GET',
-               url: 'https://instagram-scraper-api2.p.rapidapi.com/v1/posts',
+               url: 'https://social-api4.p.rapidapi.com/v1/posts',
                params: {
                   username_or_id_or_url: username,
                   url_embed_safe: 'true',
