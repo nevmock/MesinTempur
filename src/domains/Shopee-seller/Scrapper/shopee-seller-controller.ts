@@ -1,9 +1,10 @@
-import ShopeeSellerScrapperServices from "./shopee-seller-scraper-services";
-import { Request, response, Response } from 'express';
+import ShopeeSellerScrapperServices from ".../shopee-seller-scraper-services";
+import { Request, Response } from 'express';
 
 class ShopeeSellerController {
     private service = new ShopeeSellerScrapperServices();
 
+    // Scrape iklan produk
     public productAdsScrape = async (req: Request, res: Response): Promise<Response> => {
         try {
             const { startDefault, endDefault } = req.body;
@@ -12,21 +13,21 @@ class ShopeeSellerController {
             return res.status(200).json({
                 code: 200,
                 status: 'OK',
-                message: 'Product ads scraped successfully.',
+                message: 'Berhasil mengambil data iklan produk.',
                 data: entryList,
             });
         } catch (error) {
-            console.error('Error in productAdsScrape:', error);
+            console.error('Terjadi kesalahan saat mengambil iklan produk:', error);
             return res.status(500).json({
                 code: 500,
                 status: 'ERROR',
-                message: 'Failed to scrape product ads.',
+                message: 'Gagal mengambil data iklan produk.',
                 error: error instanceof Error ? error.message : error,
             });
         }
     };
 
-    // Method to handle user profile scraping requests
+    // Scrape profil pengguna
     public userProfileScrape = async (req: Request, res: Response): Promise<Response> => {
         try {
             const userInfo = await this.service.getUserInfo();
@@ -34,21 +35,21 @@ class ShopeeSellerController {
             return res.status(200).json({
                 code: 200,
                 status: 'OK',
-                message: 'User profile scraped successfully.',
+                message: 'Berhasil mengambil data profil pengguna.',
                 data: userInfo,
             });
         } catch (error) {
-            console.error('Error in userProfileScrape:', error);
+            console.error('Terjadi kesalahan saat mengambil profil pengguna:', error);
             return res.status(500).json({
                 code: 500,
                 status: 'ERROR',
-                message: 'Failed to scrape user profile.',
+                message: 'Gagal mengambil data profil pengguna.',
                 error: error instanceof Error ? error.message : error,
             });
         }
     };
     
-    // Method to handle user profile scraping requests
+    // Scrape stok produk
     public productStockScrape = async (req: Request, res: Response): Promise<Response> => {
         try {
             const productStock = await this.service.getProductStock();
@@ -56,21 +57,19 @@ class ShopeeSellerController {
             return res.status(200).json({
                 code: 200,
                 status: 'OK',
-                message: 'User profile scraped successfully.',
+                message: 'Berhasil mengambil data stok produk.',
                 data: productStock,
             });
         } catch (error) {
-            console.error('Error in userProfileScrape:', error);
+            console.error('Terjadi kesalahan saat mengambil stok produk:', error);
             return res.status(500).json({
                 code: 500,
                 status: 'ERROR',
-                message: 'Failed to scrape user profile.',
+                message: 'Gagal mengambil data stok produk.',
                 error: error instanceof Error ? error.message : error,
             });
         }
     };
-
-
 }
 
 export default new ShopeeSellerController();

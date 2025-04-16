@@ -1,6 +1,6 @@
 import BaseRoutes from '../../../base_claseses/base-routes';
 import tryCatch from '../../../utils/tryCatcher';
-import shopeeSellerController from './shopee-seller-controller';
+import shopeeSellerController from '.../shopee-seller-controller';
 
 class ShopeeSellerScraperRoutes extends BaseRoutes {
     public routes(): void {
