@@ -42,7 +42,7 @@ class BotEngine implements IBotEngine {
          // }
 
          BotEngine.browser = await puppeteer.launch({
-            headless: true,
+            headless: false,
             // executablePath: 'C:/Users/unomi/AppData/Local/Chromium/Application/chrome.exe',
             // executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
             // userDataDir: 'C:/Users/unomi/AppData/Local/Google/Chrome/User Data',

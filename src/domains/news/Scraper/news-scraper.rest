@@ -3,5 +3,5 @@ GET http://localhost:1337/api/v1/news/google-news
 Content-Type: application/json
 
 {
-  "searchKey": "dedi mulyadi"
+  "searchKey": "jokowi"
 }
