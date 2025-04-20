@@ -3,8 +3,8 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const MONGO_URI = "mongodb+srv://root:root@mesintempur.o0bdv.mongodb.net/";
-const DB_NAME = "ShopeeAds";
+const MONGO_URI = "mongodb+srv://root:root@cluster0.mvppeep.mongodb.net/";
+const DB_NAME = "mesin_tempur";
 
 let client: MongoClient;
 

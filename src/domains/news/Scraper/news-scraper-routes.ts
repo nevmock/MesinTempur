@@ -8,6 +8,10 @@ class NewsScraperRoutes extends BaseRoutes {
          '/google-news',
          tryCatch(newsScraperController.scrapeGoogleNews),
       );
+      this.router.get(
+         '/detik-news',
+         tryCatch(newsScraperController.scrapeDetikNews),
+      )
    }
 }
 

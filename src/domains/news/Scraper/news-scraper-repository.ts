@@ -7,7 +7,7 @@ import googleNewsScraper from 'google-news-scraper';
 import * as cheerio from 'cheerio';
 import GoogleNewsUtils from '../../../utils/googleNews';
 import { BasicAcceptedElems } from 'cheerio';
-import moment from 'moment';
+import moment, { max } from 'moment';
 
 class NewsRepository implements INewsRepository {
    private googleNewsUtils = new GoogleNewsUtils();
@@ -101,17 +101,47 @@ class NewsRepository implements INewsRepository {
       return results;
    }
 
-   public getDetikNews = async (size: number) => {
-      let url = `https://rech.detik.com/article-recommendation/wp/-?size=${size}&nocache=1&ids=undefined&acctype=acc-detikcom`;
-
-      await delay(5000);
-
-      const response = await BotEngine.page!.goto(url, {
-         waitUntil: 'networkidle0',
-      });
-
-      const result = await response?.json();
-      return result;
+   public getDetikNews = async (searchKey: string): Promise<any> => {
+      const maxPages = 5; // sesuaikan jumlah halaman yang ingin discan
+      const results: Array<any> = [];
+    
+      for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+        const url = `https://www.detik.com/search/searchall?query=${searchKey}&page=${pageNum}&result_type=relevansi`;
+        loggerUtils.logWithFile(`[DetikNews Repository] : go to ${url} page...`);
+    
+        await BotEngine.page?.goto(url, {
+          waitUntil: 'networkidle2',
+        });
+    
+        await delay(2000); // kasih waktu biar halaman termuat
+    
+        const content = await BotEngine.page!.content();
+        const $ = cheerio.load(content);
+    
+        const articles = $('article.list-content__item');
+    
+        if (articles.length === 0) {
+          console.log(`[PAGE ${pageNum}] Tidak ada artikel ditemukan, berhenti.`);
+          break;
+        }
+    
+        $(articles).each((i, el) => {
+          const title = $(el).find('.media__title a').text().trim();
+          const link = $(el).find('.media__title a').attr('href') || '';
+          const description = $(el).find('.media__desc').text().trim();
+          const date = $(el).find('.media__date span').attr('title') || '';
+    
+          results.push({
+            title,
+            link,
+            description,
+            date,
+            platform: 'Detik',
+          });
+        });
+      }
+    
+      return results;
    }
 
    public getResponseSerializer = async (url: string, endpoint: string): Promise<any> => {

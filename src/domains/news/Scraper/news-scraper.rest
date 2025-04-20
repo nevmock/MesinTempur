@@ -1,7 +1,7 @@
-### Google News
-GET http://localhost:1337/api/v1/news/google-news
+### dapat diganti disesuaikan dengan platform (google atau detik)
+GET http://localhost:1337/api/v1/news/detik-news
 Content-Type: application/json
 
 {
-  "searchKey": "dedi mulyadi"
+  "searchKey": "begal"
 }
