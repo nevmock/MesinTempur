@@ -3,5 +3,5 @@ GET http://localhost:1337/api/v1/tiktok/rapid/getDataUser
 Content-Type: application/json
 
 {
-    "kategori" : "skincare"
+    "kategori" : "disparbud"
 }

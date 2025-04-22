@@ -8,6 +8,8 @@ import { Op } from 'sequelize';
 import NewsRepository from './news-scraper-repository';
 import { TSaveSpiderRaw } from '../../../types/news-scraper-types';
 import BaseError from '../../../base_claseses/base-error';
+import { connectDB } from './../../../configs/news/mongodb_connection'
+
 class NewsScraperServices {
    private repository = new NewsRepository();
 
@@ -45,6 +47,15 @@ class NewsScraperServices {
 
       const formattedResponse = { data: toSnake({ response }) as any };
       console.info(formattedResponse.data)
+
+      const db = await connectDB();
+      const collection = db.collection("tes");
+
+      await collection.insertOne({
+            createdAt: new Date(),
+            data: formattedResponse.data,
+      });
+
       try {
          await this.saveBulkToNews(formattedResponse.data.response)
       } catch (e: any) {

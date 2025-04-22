@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const MONGO_URI = "mongodb+srv://root:root@mesintempur.o0bdv.mongodb.net/";
-// const MONGO_URI = "mongodb+srv://ammars:ammarridho@cluster0.9puyslt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 const DB_NAME = "ShopeeAds";
 
 let client: MongoClient;
