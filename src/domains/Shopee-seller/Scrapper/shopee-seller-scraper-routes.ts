@@ -1,6 +1,6 @@
 import BaseRoutes from '../../../base_claseses/base-routes';
 import tryCatch from '../../../utils/tryCatcher';
-import shopeeSellerController from '.../shopee-seller-controller';
+import shopeeSellerController from './shopee-seller-controller';
 
 class ShopeeSellerScraperRoutes extends BaseRoutes {
     public routes(): void {
@@ -20,6 +20,17 @@ class ShopeeSellerScraperRoutes extends BaseRoutes {
         this.router.get(
             '/product-stock',
             tryCatch(shopeeSellerController.productStockScrape),
+        );
+
+        // Route untuk scraping product stock
+        this.router.get(
+            '/product-keyword',
+            tryCatch(shopeeSellerController.productKeyScrape),
+        );
+
+        this.router.get(
+            '/product-performance',
+            tryCatch(shopeeSellerController.productPerformance),
         );
     }
 }

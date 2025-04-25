@@ -1,4 +1,4 @@
-import ShopeeSellerScrapperServices from ".../shopee-seller-scraper-services";
+import ShopeeSellerScrapperServices from "./shopee-seller-scraper-services";
 import { Request, Response } from 'express';
 
 class ShopeeSellerController {
@@ -66,6 +66,52 @@ class ShopeeSellerController {
                 code: 500,
                 status: 'ERROR',
                 message: 'Gagal mengambil data stok produk.',
+                error: error instanceof Error ? error.message : error,
+            });
+        }
+    };
+
+    // Scrape keyword produk
+    public productKeyScrape = async (req: Request, res: Response): Promise<Response> => {
+        try {
+            const { startDefault, endDefault, campaignId } = req.body;
+            console.log("campaign id", campaignId)
+            const productKey = await this.service.getProductKey(startDefault, endDefault, campaignId);
+            
+            return res.status(200).json({
+                code: 200,
+                status: 'OK',
+                message: 'Berhasil mengambil data keyword produk.',
+                data: productKey,
+            });
+        } catch (error) {
+            console.error('Terjadi kesalahan saat mengambil stok produk:', error);
+            return res.status(500).json({
+                code: 500,
+                status: 'ERROR',
+                message: 'Gagal mengambil data stok produk.',
+                error: error instanceof Error ? error.message : error,
+            });
+        }
+    };
+
+    public productPerformance = async (req: Request, res: Response): Promise<Response> => {
+        try {
+            const { startDefault, endDefault } = req.body;
+            const productPerformance = await this.service.getProductPerformance(startDefault, endDefault);
+            
+            return res.status(200).json({
+                code: 200,
+                status: 'OK',
+                message: 'Berhasil mengambil data performa produk.',
+                data: productPerformance,
+            });
+        } catch (error) {
+            console.error('Terjadi kesalahan saat mengambil iklan produk:', error);
+            return res.status(500).json({
+                code: 500,
+                status: 'ERROR',
+                message: 'Gagal mengambil data iklan produk.',
                 error: error instanceof Error ? error.message : error,
             });
         }
