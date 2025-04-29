@@ -16,6 +16,7 @@ import { IncomingMessage, Server, ServerResponse } from 'node:http';
 import shopeeSellerScraperRoutes from './domains/shopee-seller/Scrapper/shopee-seller-scraper-routes.js';
 import instagramRapidRoutes from './domains/Instagram/RapidAPI/instagram-rapid-routes';
 import tiktokRapidRoutes from './domains/TikTok/RapidAPI/tiktok-rapid-routes';
+import detikScraperRoutes from './domains/Detik/Scraper/detik-scraper-routes';
 
 class OurApp {
    private app?: Application;
@@ -53,6 +54,7 @@ class OurApp {
       this.app!.use('/api/v1/tiktok/rapid', tiktokRapidRoutes);
       this.app!.use('/api/v1/news', newsScraperRoutes);
       this.app!.use('/api/v1/shopee-seller', shopeeSellerScraperRoutes);
+      this.app!.use('/api/v1/detik', detikScraperRoutes);
    }
 
 

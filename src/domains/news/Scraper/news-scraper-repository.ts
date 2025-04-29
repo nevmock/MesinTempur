@@ -7,7 +7,7 @@ import googleNewsScraper from 'google-news-scraper';
 import * as cheerio from 'cheerio';
 import GoogleNewsUtils from '../../../utils/googleNews';
 import { BasicAcceptedElems } from 'cheerio';
-import moment from 'moment';
+import moment, { max } from 'moment';
 
 class NewsRepository implements INewsRepository {
    private googleNewsUtils = new GoogleNewsUtils();
@@ -101,18 +101,61 @@ class NewsRepository implements INewsRepository {
       return results;
    }
 
-   public getDetikNews = async (size: number) => {
-      let url = `https://rech.detik.com/article-recommendation/wp/-?size=${size}&nocache=1&ids=undefined&acctype=acc-detikcom`;
-
-      await delay(5000);
-
-      const response = await BotEngine.page!.goto(url, {
-         waitUntil: 'networkidle0',
-      });
-
-      const result = await response?.json();
-      return result;
-   }
+   public getDetikNews = async (searchKey: string): Promise<any> => {
+      const maxPages = 1; // jumlah halaman yang ingin discan
+      const results: Array<any> = [];
+  
+      for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+          const url = `https://www.detik.com/search/searchall?query=${searchKey}&page=${pageNum}&result_type=relevansi`;
+          loggerUtils.logWithFile(`[DetikNews Repository] : go to ${url} page...`);
+  
+          await BotEngine.page?.goto(url, { waitUntil: 'load' });
+  
+          const content = await BotEngine.page!.content();
+          const $ = cheerio.load(content);
+  
+          const articles = $('article.list-content__item');
+  
+          if (articles.length === 0) {
+              console.log(`[PAGE ${pageNum}] Tidak ada artikel ditemukan, berhenti.`);
+              break;
+          }
+  
+          for (const el of articles.toArray()) {
+              const title = $(el).find('.media__title a').text().trim();
+              const link = $(el).find('.media__title a').attr('href') || '';
+              const description = $(el).find('.media__desc').text().trim();
+              const date = $(el).find('.media__date span').attr('title') || '';
+  
+              let fullText = '';
+  
+              try {
+                  loggerUtils.logWithFile(`[DetikNews Repository] : membuka link ${link}`);
+                  await BotEngine.page?.goto(link, { waitUntil: 'load' });
+  
+                  const articleContent = await BotEngine.page!.content();
+                  const $$ = cheerio.load(articleContent);
+  
+                  $$('.detail__body-text.itp_bodycontent p').each((i, p) => {
+                      fullText += $$(p).text().trim() + '\n';
+                  });
+              } catch (err) {
+                  console.error(`Gagal mengambil isi dari ${link}:`, err);
+              }
+  
+              results.push({
+                  title,
+                  link,
+                  description,
+                  date,
+                  platform: 'Detik',
+                  fullText: fullText.trim(),
+              });
+          }
+      }
+  
+      return results;
+  }    
 
    public getResponseSerializer = async (url: string, endpoint: string): Promise<any> => {
       const newsResponse: Promise<string | object> = new Promise(async (resolve, reject) => {

@@ -8,6 +8,35 @@ import { Op } from 'sequelize';
 import NewsRepository from './news-scraper-repository';
 import { TSaveSpiderRaw } from '../../../types/news-scraper-types';
 import BaseError from '../../../base_claseses/base-error';
+import mongoose from 'mongoose';
+import { MongoClient } from "mongodb";
+// import dotenv from 'dotenv';
+
+// dotenv.config();
+
+// const mongoURI = process.env.MONGO_URI || 'mongodb+srv://root:root@cluster0.mvppeep.mongodb.net/';
+
+// const connectDB = async () => {
+//    try {
+//      await mongoose.connect(mongoURI); // Hanya menggunakan mongoURI tanpa opsi tambahan
+//      console.log('MongoDB Connected');
+//    } catch (err) {
+//      console.error('Error connecting to MongoDB', err);
+//      process.exit(1); // Jika gagal, berhenti aplikasi
+//    }
+//  };
+
+//INI TES KONEKSI DAN MENGIRIM KE MONGODB
+const uri = process.env.MONGO_URI || "mongodb+srv://root:root@cluster0.mvppeep.mongodb.net/";
+const client = new MongoClient(uri);
+
+export const connectDB = async () => {
+   if (!client?.db) {
+      await client.connect();
+   }
+   return client.db("mesin_tempur"); 
+};
+
 class NewsScraperServices {
    private repository = new NewsRepository();
 
@@ -23,6 +52,8 @@ class NewsScraperServices {
             content: payload.content,
             platform: payload.platform,
          });
+      } else{
+         
       }
    };
 
@@ -41,34 +72,62 @@ class NewsScraperServices {
 
    public scrapeGoogleNews_v2 = async(searchKey: string): Promise<void> => {
       const response = await this.repository.getGoogleNews(searchKey)
-      // const dateCriteria = moment().subtract(1, 'days');
 
       const formattedResponse = { data: toSnake({ response }) as any };
       console.info(formattedResponse.data)
       try {
-         await this.saveBulkToNews(formattedResponse.data.response)
-      } catch (e: any) {
-         throw new BaseError(500, 'INTERNAL_SERVER_ERROR', e.toString())
-      }
-      //
-      // for (const news of response) {
-      //    try {
-      //       await this.saveToNews(news)
-      //    } catch (e: any) {
-      //       console.error(e)
-      //       throw new BaseError(500, 'INTERNAL_SERVER_ERROR', e.toString())
-      //    }
-      //    // if (news.datetime.year() === dateCriteria.year() && news.datetime.month() === dateCriteria.month() && news.datetime.day() === dateCriteria.day()) {
-      //    //    await this.saveToNews(news)
-      //    // }
-      // }
+         const db = await connectDB();
+         const collection = db.collection("google_news"); //sesuaikan db collection nya
+   
+         await collection.insertOne({
+            createdAt: new Date(),
+            articles: formattedResponse.data.response,  // Simpan seluruh data dalam array `articles`
+         });
+ 
+         console.log(`✅ berita berhasil disimpan ke MongoDB`);
+       } catch (e: any) {
+          console.error("❌ Gagal menyimpan berita Google:", e);
+          throw new BaseError(500, 'INTERNAL_SERVER_ERROR', e.toString());
+       }
    }
 
-   public saveBulkToNews = async (data: any): Promise<void> => {
-      await db.news.bulkCreate(data, {
-         updateOnDuplicate: ["title"],
-      });
+   public scrapeDetikNews = async(searchKey: string): Promise<void>=>{
+      const response = await this.repository.getDetikNews(searchKey);
+      const formattedResponse = { data: toSnake({ response }) as any };
+    
+      console.info(formattedResponse.data);
+    
+      try {
+        const db = await connectDB();
+        const collection = db.collection("detik_news"); //sesuaikan db collection nya
+  
+        await collection.insertOne({
+           createdAt: new Date(),
+           articles: formattedResponse.data.response,  // Simpan seluruh data dalam array `articles`
+        });
+
+        console.log(`✅ berita berhasil disimpan ke MongoDB`);
+      } catch (e: any) {
+         console.error("❌ Gagal menyimpan berita Detik:", e);
+         throw new BaseError(500, 'INTERNAL_SERVER_ERROR', e.toString());
+      }
+
    }
+
+   // public saveBulkToNews = async (data: any): Promise<void> => {
+   //    try {
+   //       const db = await connectDB();
+   //       const collection = db.collection("news_scrap");
+   
+   //       await collection.insertOne({
+   //          createdAt: new Date(),
+   //          articles: data,  // Simpan seluruh data dalam array `articles`
+   //       });
+   //       console.log(`✅ berita berhasil disimpan ke MongoDB`);
+   //    } catch (error) {
+   //       console.error("❌ Gagal menyimpan ke MongoDB:", error);
+   //    }
+   // }
 
    public scrapeGoogleNews_v1 = async(searchKey: string): Promise<void> => {
       // const response = await this.repository.getGoogleNews(searchKey)

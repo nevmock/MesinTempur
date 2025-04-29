@@ -29,6 +29,21 @@ class NewsScraperController {
          },
       });
    }
+
+   public scrapeDetikNews = async (
+      req: Request,
+      res: Response,
+    ): Promise<Response> => {
+      console.info(req.body.searchKey);
+      await this.newsScraperServices.scrapeDetikNews(req.body.searchKey);
+      return res.status(200).json({
+        code: 200,
+        status: 'OK',
+        data: {
+          message: 'OK',
+        },
+      });
+    }
 }
 
 export default new NewsScraperController();
