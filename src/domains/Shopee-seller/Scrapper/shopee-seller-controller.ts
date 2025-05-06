@@ -27,6 +27,28 @@ class ShopeeSellerController {
         }
     };
 
+    // Scrape iklan produk daily
+    public productAdsScrapeDaily = async (res: Response): Promise<Response> => {
+        try {
+            const entryList = await this.service.getProductAdsDaily();
+            
+            return res.status(200).json({
+                code: 200,
+                status: 'OK',
+                message: 'Berhasil mengambil data iklan produk.',
+                data: entryList,
+            });
+        } catch (error) {
+            console.error('Terjadi kesalahan saat mengambil iklan produk:', error);
+            return res.status(500).json({
+                code: 500,
+                status: 'ERROR',
+                message: 'Gagal mengambil data iklan produk.',
+                error: error instanceof Error ? error.message : error,
+            });
+        }
+    };
+
     // Scrape profil pengguna
     public userProfileScrape = async (req: Request, res: Response): Promise<Response> => {
         try {
@@ -99,6 +121,27 @@ class ShopeeSellerController {
         try {
             const { startDefault, endDefault } = req.body;
             const productPerformance = await this.service.getProductPerformance(startDefault, endDefault);
+            
+            return res.status(200).json({
+                code: 200,
+                status: 'OK',
+                message: 'Berhasil mengambil data performa produk.',
+                data: productPerformance,
+            });
+        } catch (error) {
+            console.error('Terjadi kesalahan saat mengambil iklan produk:', error);
+            return res.status(500).json({
+                code: 500,
+                status: 'ERROR',
+                message: 'Gagal mengambil data iklan produk.',
+                error: error instanceof Error ? error.message : error,
+            });
+        }
+    };
+
+    public login = async (res: Response): Promise<Response> => {
+        try {
+            const productPerformance = await this.service.login();
             
             return res.status(200).json({
                 code: 200,

@@ -10,6 +10,11 @@ class ShopeeSellerScraperRoutes extends BaseRoutes {
             tryCatch(shopeeSellerController.productAdsScrape),
         );
 
+        this.router.get(
+            '/product-ads-daily',
+            tryCatch(shopeeSellerController.productAdsScrapeDaily),
+        );
+
         // Route untuk scraping profil pengguna
         this.router.get(
             '/user-profile',
@@ -31,6 +36,11 @@ class ShopeeSellerScraperRoutes extends BaseRoutes {
         this.router.get(
             '/product-performance',
             tryCatch(shopeeSellerController.productPerformance),
+        );
+
+        this.router.get(
+            '/login',
+            tryCatch(shopeeSellerController.login),
         );
     }
 }

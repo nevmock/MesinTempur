@@ -1,7 +1,9 @@
 import BotEngine from '../../../bot-engine';
 import axios from 'axios';
 import { delay } from 'bluebird';
+import { error } from 'console';
 import jsonfile from 'jsonfile';
+import readline from 'readline';
 
 class ShopeeSellerRepository {
     private async getCookies(): Promise<any[]> {
@@ -36,6 +38,107 @@ class ShopeeSellerRepository {
         await delay(10000)
         await BotEngine.writeCookies({ platform: 'shopee_seller', botAccountIndex: 0 })
     }
+
+
+
+    public LoginShopee = async (): Promise<any> => {
+        const loginUrl = 'https://accounts.shopee.co.id/seller/login';
+
+        // Navigasi ke halaman login
+        await BotEngine.page?.goto(loginUrl, { waitUntil: 'load' });
+
+        // Klik tombol login awal
+        await BotEngine.page?.waitForSelector('.gLYGM2');
+        await BotEngine.page?.click('.gLYGM2');
+        console.log('Tombol login diklik.');
+
+        // Tunggu input email
+        await BotEngine.page?.waitForSelector('.shopee-input__input');
+
+        // Cek apakah input email sudah terisi
+        const emailValue = await BotEngine.page?.$eval('.shopee-input__input', el => (el as HTMLInputElement).value);
+        if (!emailValue || emailValue.trim() === '') {
+            await BotEngine.page?.type('.shopee-input__input', 'SCA.AMK:ananda', { delay: 100 });
+        } else {
+            await BotEngine.page?.click('.shopee-input__input');
+            await BotEngine.page?.keyboard.press('Tab');
+            console.log('Email sudah terisi, lanjut ke password.');
+        }
+
+        // Isi password
+        await BotEngine.page?.waitForSelector('.password.form-item');
+        await BotEngine.page?.click('.password.form-item');
+        await BotEngine.page?.type('.password.form-item', 'Jkt123$.', { delay: 100 });
+
+        // Klik tombol login setelah isi password
+        await BotEngine.page?.waitForSelector('.shopee-button.login-btn.shopee-button--primary.shopee-button--large.shopee-button--block');
+        await BotEngine.page?.click('.shopee-button.login-btn.shopee-button--primary.shopee-button--large.shopee-button--block');
+        console.log('Tombol login utama diklik.');
+
+        // Klik tombol berdasarkan teks "Kirim ke No. Handphone"
+        const [otpButton] = await (BotEngine.page as any).$x("//button[contains(text(), 'Kirim ke No. Handphone')]");
+        if (otpButton) {
+            await otpButton.click();
+            console.log('Tombol "Kirim ke No. Handphone" diklik berdasarkan teks.');
+        } else {
+            console.log('Tombol tidak ditemukan berdasarkan teks.');
+        }
+
+
+
+        // Tunggu input OTP muncul
+        await BotEngine.page?.waitForSelector('.otp-input-class'); // Ganti dengan class OTP input yang benar
+
+        // Ambil input OTP dari console
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
+
+        const otp: string = await new Promise((resolve) => {
+            rl.question('Masukkan OTP yang diterima: ', (answer) => {
+                rl.close();
+                resolve(answer.trim());
+            });
+        });
+
+        // Input OTP ke form
+        await BotEngine.page?.type('.otp-input-class', otp, { delay: 100 }); // Ganti dengan class input OTP yang benar
+
+        // Klik tombol verifikasi
+        await BotEngine.page?.click('.verify-button-class'); // Ganti dengan class tombol verifikasi OTP
+
+        // Tunggu proses selesai
+        await BotEngine.page?.waitForNavigation({ waitUntil: 'load' });
+
+        console.log('Login berhasil dengan OTP.');
+    };
+
+    public getYesterdayStartEpoch = async (): Promise<any> => {
+        const WIB_OFFSET = 7 * 60 * 60 * 1000;
+        const now = new Date();
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+    
+        const startDate = new Date(yesterday);
+        startDate.setHours(0, 0, 1, 0); // 00:00:01 WIB
+        const startEpoch = Math.floor((startDate.getTime() - WIB_OFFSET) / 1000);
+    
+        return startEpoch;
+    };
+
+    public getYesterdayEndEpoch = async (): Promise<any> => {
+        const WIB_OFFSET = 7 * 60 * 60 * 1000;
+        const now = new Date();
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+    
+        const endDate = new Date(yesterday);
+        endDate.setHours(23, 59, 59, 0); // 23:59:59 WIB
+        const endEpoch = Math.floor((endDate.getTime() - WIB_OFFSET) / 1000);
+    
+        return endEpoch;
+    };
 
     public getProductStock = async (): Promise<any> => {
         try {
@@ -178,7 +281,6 @@ class ShopeeSellerRepository {
             const productAdsResponse = await axios(productAdsRequest);
             const shopInfoResponse = await axios(shopInfoRequest);
 
-            console.info('Iklan produk berhasil diambil:', productAdsResponse.data);
 
             return {
                 shop_id: shopInfoResponse.data.shop_id,
@@ -234,7 +336,6 @@ class ShopeeSellerRepository {
             };
 
             const resultId = await axios(optionsId);
-            console.info(resultId);
             return resultId.data
         } catch (error: any) {
             console.error('Gagal mengambil iklan produk:', error?.message || error);
@@ -244,6 +345,7 @@ class ShopeeSellerRepository {
 
     public getProductKey = async (startTime: any, endTime: any, campaignIdValue: any): Promise<any> => {
         try {
+            console.info('masuk')
             const cookies = await this.getCookies() ?? [];
             if (cookies.length === 0) {
                 throw new Error('Cookie tidak ditemukan.');
@@ -281,18 +383,26 @@ class ShopeeSellerRepository {
                 },
                 timeout: 60000,
                 data: {
-                    start_time: parseInt(String(startTime)),
-                    end_time: parseInt(String(endTime)),
-                    campaign_type: "product",
                     agg_type: "keyword",
-                    campaign_id: campaignIdValue,
-                    need_ratio: true
-                }
+                    campaign_type: "product",
+                    end_time: endTime,
+                    filter_params: {
+                      campaign_id: campaignIdValue
+                    },
+                    header: {},
+                    need_ratio: true,
+                    start_time: startTime
+                  }
             };
+            console.info(keywordReportRequest)
 
             const keywordReportResponse = await axios(keywordReportRequest);
+            console.info('ini', keywordReportRequest)
             console.info('Kata kunci iklan berhasil diambil:', keywordReportResponse.data);
-            return keywordReportResponse.data;
+            return {
+                campaignId: campaignIdValue,
+                keyword_info: keywordReportResponse.data
+            };
 
         } catch (error: any) {
             console.error('Gagal mengambil kata kunci iklan:', error?.message || error);
@@ -457,7 +567,7 @@ class ShopeeSellerRepository {
                 timeout: 60000,
             };
 
-            const finalResponse = await axios(finalRequestOptions);
+            const finalResponse = await axios(previewRequestOptions);
             const shopInfoResponse = await axios(shopInfoRequest);
 
             console.info('Data iklan produk berhasil diambil:', finalResponse);

@@ -3,19 +3,14 @@ GET http://localhost:1337/api/v1/shopee-seller/product-ads
 Content-Type: application/json
 
 {
-    //tanggal 17 2025
-    //"startDefault": "1727715600",
-    //"endDefault": "1730393999"
-
-
-    //tanggal 16 2025
     "startDefault": "1744909200",
     "endDefault": "1744995599"
-
-    //tanggal 15 januari 2025
-    //"startDefault": "1736874000",
-    //"endDefault": "1736960399"
 }
+
+### SHOPEE ADS DAILY
+GET http://localhost:1337/api/v1/shopee-seller/product-ads-daily
+Content-Type: application/json
+
 
 ### USER INFO
 GET http://localhost:1337/api/v1/shopee-seller/user-profile
@@ -30,19 +25,9 @@ GET http://localhost:1337/api/v1/shopee-seller/product-keyword
 Content-Type: application/json
 
 {
-    //tanggal 17 2025
-    //"startDefault": "1727715600",
-    //"endDefault": "1730393999"
-
-
-    //tanggal 16 2025
-    "startDefault": "1744909200",
-    "endDefault": "1744995599",
+    "startDefault": "1746464400",
+    "endDefault": "1746550799",
     "campaignId": "314012238"
-
-    //tanggal 15 januari 2025
-    //"startDefault": "1736874000",
-    //"endDefault": "1736960399"
 }
 
 ### PRODUCT PERFORMANCE
@@ -50,16 +35,10 @@ GET http://localhost:1337/api/v1/shopee-seller/product-performance
 Content-Type: application/json
 
 {
-    //tanggal 17 2025
-    //"startDefault": "1727715600",
-    //"endDefault": "1730393999"
-
-
-    //tanggal 16 2025
     "startDefault": "1744909200",
     "endDefault": "1744995599"
-
-    //tanggal 15 januari 2025
-    //"startDefault": "1736874000",
-    //"endDefault": "1736960399"
 }
+
+### AUTO LOGIN
+GET http://localhost:1337/api/v1/shopee-seller/login
+Content-Type: application/json
