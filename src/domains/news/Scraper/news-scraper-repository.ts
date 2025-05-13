@@ -102,7 +102,7 @@ class NewsRepository implements INewsRepository {
    }
 
    public getDetikNews = async (searchKey: string): Promise<any> => {
-      const maxPages = 1; // jumlah halaman yang ingin discan
+      const maxPages = 3; // jumlah halaman yang ingin discan
       const results: Array<any> = [];
   
       for (let pageNum = 1; pageNum <= maxPages; pageNum++) {

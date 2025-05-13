@@ -17,6 +17,7 @@ import shopeeSellerScraperRoutes from './domains/shopee-seller/Scrapper/shopee-s
 import instagramRapidRoutes from './domains/Instagram/RapidAPI/instagram-rapid-routes';
 import tiktokRapidRoutes from './domains/TikTok/RapidAPI/tiktok-rapid-routes';
 import detikScraperRoutes from './domains/Detik/Scraper/detik-scraper-routes';
+import kompasScraperRoutes from './domains/Kompas/Scraper/kompas-scraper-routes'
 
 class OurApp {
    private app?: Application;
@@ -55,6 +56,7 @@ class OurApp {
       this.app!.use('/api/v1/news', newsScraperRoutes);
       this.app!.use('/api/v1/shopee-seller', shopeeSellerScraperRoutes);
       this.app!.use('/api/v1/detik', detikScraperRoutes);
+      this.app!.use('/api/v1/kompas', kompasScraperRoutes);
    }
 
 

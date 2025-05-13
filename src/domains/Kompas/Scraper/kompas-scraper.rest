@@ -1,7 +1,7 @@
 ### dapat diganti disesuaikan dengan platform (google atau detik)
-GET http://localhost:1337/api/v1/detik/detik
+GET http://localhost:1337/api/v1/kompas/kompas
 Content-Type: application/json
 
 {
-  "searchKey": "dedi mulyadi"
+  "searchKey": "jokowi"
 }

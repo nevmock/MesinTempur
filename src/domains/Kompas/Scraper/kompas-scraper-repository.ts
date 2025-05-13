@@ -3,27 +3,23 @@ import delay from '../../../utils/delay';
 import BotEngine from '../../../bot-engine';
 import loggerUtils from '../../../utils/logger';
 import { Browser, HTTPResponse, Page } from 'puppeteer';
-import googleNewsScraper from 'google-news-scraper';
 import * as cheerio from 'cheerio';
-import GoogleNewsUtils from '../../../utils/googleNews';
-import { BasicAcceptedElems } from 'cheerio';
-import moment, { max } from 'moment';
 
-class DetikRepository implements INewsRepository {
-    public getDetikNews = async (searchKey: string): Promise<any> => {
-        const maxPages = 1; // jumlah halaman yang ingin discan
+class KompasRepository implements INewsRepository {
+    public getKompasNews = async (searchKey: string): Promise<any> => {
+        const maxPages = 3; // jumlah halaman yang ingin discan
         const results: Array<any> = [];
     
         for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
-            const url = `https://www.detik.com/search/searchall?query=${searchKey}&page=${pageNum}&result_type=relevansi`;
-            loggerUtils.logWithFile(`[DetikNews Repository] : go to ${url} page...`);
+            const url = `https://search.kompas.com/search?q=${searchKey}&page=${pageNum}`;
+            loggerUtils.logWithFile(`[KompasNews Repository] : go to ${url} page...`);
     
             await BotEngine.page?.goto(url, { waitUntil: 'domcontentloaded' });
     
             const content = await BotEngine.page!.content();
             const $ = cheerio.load(content);
     
-            const articles = $('article.list-content__item');
+            const articles = $('.articleItem');
     
             if (articles.length === 0) {
                 console.log(`[PAGE ${pageNum}] Tidak ada artikel ditemukan, berhenti.`);
@@ -31,23 +27,32 @@ class DetikRepository implements INewsRepository {
             }
     
             for (const el of articles.toArray()) {
-                const title = $(el).find('.media__title a').text().trim();
-                const link = $(el).find('.media__title a').attr('href') || '';
-                const description = $(el).find('.media__desc').text().trim();
-                const date = $(el).find('.media__date span').attr('title') || '';
+                const title = $(el).find('.articleTitle').text().trim();
+                const link = $(el).find('.article-link').attr('href') || '';
+                const description = $(el).find('.articleLead > p').text().trim();
+                const date = $(el).find('.articlePost-date').text().trim();
+                const jenis = $(el).find('.articlePost-subtitle').text().trim().toLowerCase();
+
+                if (jenis === 'video') {
+                    loggerUtils.logWithFile(`[KompasNews Repository] : melewati artikel video - ${title}`);
+                    continue;
+                }
     
                 let fullText = '';
     
                 try {
                     console.time(`Waktu proses link: ${link}`);
-                    loggerUtils.logWithFile(`[DetikNews Repository] : membuka link ${link}`);
+                    loggerUtils.logWithFile(`[KompasNews Repository] : membuka link ${link}`);
                     await BotEngine.page?.goto(link, { waitUntil: 'domcontentloaded' });
     
                     const articleContent = await BotEngine.page!.content();
                     const $$ = cheerio.load(articleContent);
     
-                    $$('.detail__body-text.itp_bodycontent p').each((i, p) => {
-                        fullText += $$(p).text().trim() + '\n';
+                    $$('.clearfix p').each((i, p) => {
+                        const text = $$(p).text().trim();
+                        if (text) {
+                            fullText += text + '\n';
+                        }
                     });
                     console.timeEnd(`Waktu proses link: ${link}`);
                 } catch (err) {
@@ -59,7 +64,7 @@ class DetikRepository implements INewsRepository {
                     link,
                     description,
                     date,
-                    platform: 'Detik',
+                    platform: 'Kompas',
                     fullText: fullText.trim(),
                 });
             }
@@ -103,4 +108,4 @@ class DetikRepository implements INewsRepository {
         return newsResponse;
     }
 }
-export default DetikRepository;
+export default KompasRepository;
