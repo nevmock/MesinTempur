@@ -3,7 +3,9 @@ import ShopeeSellerRepository from './shopee-seller-repository';
 import db from '../../../models';
 import BotEngine from '../../../bot-engine';
 import delay from '../../../utils/delay';
-import { connectDB } from "../../../configs/shopee/mongodb-connection";
+import { connectDB, closeDB } from "../../../configs/shopee/mongodb-connection";
+import { platform } from 'node:os';
+import { MongoClient } from 'mongodb';
 
 class ShopeeSellerScrapperServices {
     private sellerRepository: ShopeeSellerRepository;
@@ -25,19 +27,18 @@ class ShopeeSellerScrapperServices {
 
     public getUserInfo = async (): Promise<any> => {
         try {
-            await this.sellerRepository.LoginShopee();
+            await BotEngine.writeCookies({ platform: 'shopee_seller', botAccountIndex: 0 });
             const profileUrl = `https://seller.shopee.co.id/portal/settings/shop/profile`;
 
             const isSessionAvailable = await BotEngine.hasSession({ platform: 'shopee_seller', botAccountIndex: 0 });
-
             if (isSessionAvailable) {
                 await BotEngine.page?.goto(profileUrl, { waitUntil: 'load' });
             }
 
             const profileData = await this.sellerRepository.getUserInfo();
 
-            const mongoDB = await connectDB();
-            const userCollection = mongoDB.collection("UserInfo");
+            const { client, db } = await connectDB();
+            const userCollection = db.collection("UserInfo");
 
             await userCollection.insertOne({
                 uuid: "123e4567-e89b-12d3-a456-426614174000",
@@ -50,11 +51,14 @@ class ShopeeSellerScrapperServices {
         } catch (error) {
             console.error('❌ Terjadi kesalahan saat memproses data profil pengguna:', error);
             return null;
+        } finally {
+            await closeDB();
         }
     };
 
     public getProductAds = async (startDate: string, endDate: any): Promise<any> => {
         try {
+            // await BotEngine.writeCookies({ platform: 'shopee_seller', botAccountIndex: 0 })
             const adsUrl = `https://seller.shopee.co.id/portal/marketing/pas/index?source_page_id=1&from=${startDate}&to=${endDate}&type=new_cpc_homepage&group=custom`;
 
             await BotEngine.page?.goto(adsUrl, { waitUntil: 'load' });
@@ -82,16 +86,16 @@ class ShopeeSellerScrapperServices {
             const shopId = shopInfo.data.shop_id;
             console.info(shopId)
 
-            const mongoDB = await connectDB();
-            const adsCollection = mongoDB.collection("ProductAds");
+            const { client, db } = await connectDB();
+            const adsCollection = db.collection("ProductAds");
 
             await adsCollection.insertOne({
                 uuid: "123e4567-e89b-12d3-a456-426614174000",
                 createdAt: new Date(),
                 from: startDate,
                 to: endDate,
-                shop_id: shopId,
-                data: adsData,
+                shop_id: String(shopId), //string
+                profile_info: adsData,
             });
 
             console.info("✅ Data iklan produk berhasil disimpan ke MongoDB");
@@ -99,20 +103,22 @@ class ShopeeSellerScrapperServices {
         } catch (error) {
             console.error('❌ Terjadi kesalahan saat memproses data iklan produk:', error);
             return null;
+        } finally {
+            await closeDB();
         }
     };
 
     public getProductAdsDaily = async (): Promise<any> => {
         try {
-            const startDate = await this.sellerRepository.getYesterdayStartEpoch
-            const endDate = await this.sellerRepository.getYesterdayEndEpoch
+            const startDate = await this.sellerRepository.getYesterdayStartEpoch();
+            const endDate = await this.sellerRepository.getYesterdayEndEpoch();
+            console.info(startDate);
+            console.info(endDate);
             const adsUrl = `https://seller.shopee.co.id/portal/marketing/pas/index?source_page_id=1&from=${startDate}&to=${endDate}&type=new_cpc_homepage&group=custom`;
 
             await BotEngine.page?.goto(adsUrl, { waitUntil: 'load' });
             const botAccountIndex = 0;
             const platform = 'shopee_seller';
-
-            const url = new URL(adsUrl);
 
             const isSessionAvailable = await BotEngine.hasSession({ platform, botAccountIndex });
             if (isSessionAvailable) {
@@ -124,18 +130,18 @@ class ShopeeSellerScrapperServices {
 
             const adsData = await this.sellerRepository.getProductAds2(startDate, endDate);
             const shopInfo = await this.sellerRepository.getProductAdsInfo();
-            const shopId = shopInfo.shop_id;
-            console.info(shopInfo.data.data.data)
+            const shopId = shopInfo.data.shop_id;
+            console.info(shopId)
 
-            const mongoDB = await connectDB();
-            const adsCollection = mongoDB.collection("ProductAds");
+            const { client, db } = await connectDB();
+            const adsCollection = db.collection("ProductAds");
 
             await adsCollection.insertOne({
                 uuid: "123e4567-e89b-12d3-a456-426614174000",
                 createdAt: new Date(),
                 from: startDate,
                 to: endDate,
-                shop_id: shopId,
+                shop_id: String(shopId),
                 data: adsData,
             });
 
@@ -144,6 +150,8 @@ class ShopeeSellerScrapperServices {
         } catch (error) {
             console.error('❌ Terjadi kesalahan saat memproses data iklan produk:', error);
             return null;
+        } finally {
+            await closeDB();
         }
     };
 
@@ -161,8 +169,8 @@ class ShopeeSellerScrapperServices {
 
             const stockData = await this.sellerRepository.getProductStock();
 
-            const mongoDB = await connectDB();
-            const stockCollection = mongoDB.collection("ProductStock");
+            const { client, db } = await connectDB();
+            const stockCollection = db.collection("ProductStock");
 
             await stockCollection.insertOne({
                 uuid: "123e4567-e89b-12d3-a456-426614174000",
@@ -175,6 +183,8 @@ class ShopeeSellerScrapperServices {
         } catch (error) {
             console.error('❌ Terjadi kesalahan saat memproses data stok produk:', error);
             return null;
+        } finally {
+            await closeDB();
         }
     };
 
@@ -183,14 +193,9 @@ class ShopeeSellerScrapperServices {
         try {
             const botAccountIndex = 0;
             const platform = 'shopee_seller';
-            const keywordUrl = `https://seller.shopee.co.id/portal/marketing/pas/product/manual/${campaignId}?from=${startDate}&to=${endDate}&group=today`;
-            const homeUrl = 'https://seller.shopee.co.id/'
-            await BotEngine.page?.goto(homeUrl, { waitUntil: 'load' });
-            await delay(10000)
-            await BotEngine.writeCookies({platform, botAccountIndex});
-            await BotEngine.page?.goto(keywordUrl, { waitUntil: 'load' });
+            const keywordUrl = `https://seller.shopee.co.id/portal/marketing/pas/product/manual/${campaignId}?from=${startDate}&to=${endDate}&group=last_week`;
 
-            
+
             const url = new URL(keywordUrl);
             const fromTimestamp = Number(url.searchParams.get('from'));
             const toTimestamp = Number(url.searchParams.get('to'));
@@ -201,16 +206,18 @@ class ShopeeSellerScrapperServices {
 
             const isSessionAvailable = await BotEngine.hasSession({ platform, botAccountIndex });
             if (isSessionAvailable) {
-                await BotEngine.page?.goto(keywordUrl, { waitUntil: 'load' });
+                // await BotEngine.page?.goto(keywordUrl, { waitUntil: 'load' });
+                console.info("session avail")
                 await delay(5000);
+            } else {
+                console.info("Session not avail")
             }
 
             console.log(`🔍 Mengambil data keyword dari: ${startDate} hingga: ${endDate}, ID kampanye: ${campaignId}`);
-            
-            const keywordData = await this.sellerRepository.getProductKey(startDate, endDate, campaignId);
 
-            const mongoDB = await connectDB();
-            const keywordCollection = mongoDB.collection("ProductKey");
+            const keywordData = await this.sellerRepository.getProductKey(startDate, endDate, campaignId);
+            const { client, db } = await connectDB();
+            const keywordCollection = db.collection("ProductKey");
 
             await keywordCollection.insertOne({
                 uuid: "123e4567-e89b-12d3-a456-426614174000",
@@ -224,8 +231,11 @@ class ShopeeSellerScrapperServices {
             console.info("✅ Data keyword iklan berhasil disimpan ke MongoDB");
             return keywordData;
         } catch (error) {
-            console.error('❌ Terjadi kesalahan saat memproses data keyword iklan produk:', error);
+            console.error(error)
+            // console.error('❌ Terjadi kesalahan saat memproses data keyword iklan produk:', error);
             return null;
+        } finally {
+            await closeDB();
         }
     };
 
@@ -251,8 +261,8 @@ class ShopeeSellerScrapperServices {
 
             const keywordData = await this.sellerRepository.getProductKey(startDate, endDate, campaignId);
 
-            const mongoDB = await connectDB();
-            const keywordCollection = mongoDB.collection("ProductKey");
+            const { client, db } = await connectDB();
+            const keywordCollection = db.collection("ProductKey");
 
             await keywordCollection.insertOne({
                 uuid: "123e4567-e89b-12d3-a456-426614174000",
@@ -268,6 +278,8 @@ class ShopeeSellerScrapperServices {
         } catch (error) {
             console.error('❌ Terjadi kesalahan saat memproses data keyword iklan produk:', error);
             return null;
+        } finally {
+            await closeDB();
         }
     };
 
@@ -278,9 +290,7 @@ class ShopeeSellerScrapperServices {
             await BotEngine.page?.goto(performanceUrl, { waitUntil: 'load' });
             const botAccountIndex = 0;
             const platform = 'shopee_seller';
-            await delay(10000)
 
-            await BotEngine.writeCookies({ platform, botAccountIndex });
 
             const url = new URL(performanceUrl);
             const fromTimestamp = Number(url.searchParams.get('from'));
@@ -299,29 +309,33 @@ class ShopeeSellerScrapperServices {
             console.log(`📦 Mengambil data performa produk dari: ${startDate} hingga: ${endDate}`);
 
             const performanceData = await this.sellerRepository.getProductPerformance(startDate, endDate);
-
-            const mongoDB = await connectDB();
-            const performanceCollection = mongoDB.collection("ProductPerformance");
+            const shopId = await this.sellerRepository.getShopInfo();
+            const { client, db } = await connectDB();
+            const performanceCollection = db.collection("ProductPerformance");
 
             await performanceCollection.insertOne({
                 uuid: "123e4567-e89b-12d3-a456-426614174000",
                 createdAt: new Date(),
                 from: startDate,
                 to: endDate,
-                data: performanceData,
+                shop_id: shopId,
+                data: performanceData
             });
+
 
             console.info("✅ Data performa produk berhasil disimpan ke MongoDB");
             return performanceData;
         } catch (error) {
             console.error('❌ Terjadi kesalahan saat memproses data performa produk:', error);
             return null;
+        } finally {
+            await closeDB();
         }
     };
 
     public login = async (): Promise<any> => {
         try {
-            await this.sellerRepository.LoginShopee();
+            await this.sellerRepository.initLoginShopee();
             console.info("✅ Data keyword iklan berhasil disimpan ke MongoDB");
         } catch (error) {
             console.error('❌ Terjadi kesalahan saat memproses data keyword iklan produk:', error);

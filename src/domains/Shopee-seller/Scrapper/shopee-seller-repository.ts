@@ -6,6 +6,14 @@ import jsonfile from 'jsonfile';
 import readline from 'readline';
 
 class ShopeeSellerRepository {
+    private cookiesKey = [
+                "REC_T_ID", "SPC_F", "_gcl_au", "_fbp", "SPC_CLIENTID", "SPC_EC", "SPC_ST",
+                "SPC_SC_SESSION", "SPC_STK", "SC_DFP", "_QPWSDCXHZQA", "REC7iLP4Q", "SPC_U",
+                "SPC_T_IV", "SPC_R_T_ID", "SPC_R_T_IV", "SPC_T_ID", "_ga", "_ga_SW6D8G0HXK",
+                "SPC_CDS", "SPC_SEC_SI", "SPC_SI", "CTOKEN", "SPC_CDS_CHAT", "_sapid",
+                "shopee_webUnique_ccd", "ds", "SC_SSO", "SC_SSO_U", "SPC_SC_OFFLINE_TOKEN"
+            ];
+
     private async getCookies(): Promise<any[]> {
         return await jsonfile.readFile(
             BotEngine.getSessionsPath({ platform: 'shopee_seller', botAccountIndex: 0 })
@@ -26,7 +34,7 @@ class ShopeeSellerRepository {
 
     private generateCookieHeader(cookies: any[], keysToFilter: string[]): string {
         return cookies
-            .filter((session: any) => keysToFilter.includes(session.name))
+            // .filter((session: any) => keysToFilter.includes(session.name))
             .map((session: any) => `${session.name}=${session.value}`)
             .join('; ');
     }
@@ -41,7 +49,7 @@ class ShopeeSellerRepository {
 
 
 
-    public LoginShopee = async (): Promise<any> => {
+    public initLoginShopee = async (): Promise<any> => {
         const loginUrl = 'https://accounts.shopee.co.id/seller/login';
 
         // Navigasi ke halaman login
@@ -75,6 +83,9 @@ class ShopeeSellerRepository {
         await BotEngine.page?.click('.shopee-button.login-btn.shopee-button--primary.shopee-button--large.shopee-button--block');
         console.log('Tombol login utama diklik.');
 
+    };
+
+    public otpLoginShopee = async (): Promise<any> => {
         // Klik tombol berdasarkan teks "Kirim ke No. Handphone"
         const [otpButton] = await (BotEngine.page as any).$x("//button[contains(text(), 'Kirim ke No. Handphone')]");
         if (otpButton) {
@@ -114,16 +125,17 @@ class ShopeeSellerRepository {
         console.log('Login berhasil dengan OTP.');
     };
 
+
     public getYesterdayStartEpoch = async (): Promise<any> => {
         const WIB_OFFSET = 7 * 60 * 60 * 1000;
         const now = new Date();
         const yesterday = new Date(now);
         yesterday.setDate(now.getDate() - 1);
-    
+
         const startDate = new Date(yesterday);
-        startDate.setHours(0, 0, 1, 0); // 00:00:01 WIB
-        const startEpoch = Math.floor((startDate.getTime() - WIB_OFFSET) / 1000);
-    
+        startDate.setHours(0, 0, 0, 0); // 00:00:01 WIB
+        const startEpoch = Math.floor((startDate.getTime()) / 1000);
+
         return startEpoch;
     };
 
@@ -132,12 +144,97 @@ class ShopeeSellerRepository {
         const now = new Date();
         const yesterday = new Date(now);
         yesterday.setDate(now.getDate() - 1);
-    
+
         const endDate = new Date(yesterday);
-        endDate.setHours(23, 59, 59, 0); // 23:59:59 WIB
-        const endEpoch = Math.floor((endDate.getTime() - WIB_OFFSET) / 1000);
-    
+        endDate.setHours(23, 59, 59, 999); // 23:59:59 WIB
+        const endEpoch = Math.floor((endDate.getTime()) / 1000);
+
         return endEpoch;
+    };
+
+    public getShopInfo = async (): Promise<any> => {
+        try {
+            const cookies = await this.getCookies() ?? [];
+
+            if (cookies.length === 0) {
+                throw new Error('Cookie tidak ditemukan.');
+            }
+
+            if (!BotEngine.page) {
+                throw new Error('BotEngine.page tidak tersedia.');
+            }
+
+            await BotEngine.page.setCookie(...this.sanitizeCookies(cookies));
+
+            const spcCdsValue = cookies.find((cookie: any) => cookie.name === 'SPC_CDS')?.value;
+            if (!spcCdsValue) {
+                throw new Error('Cookie SPC_CDS tidak ditemukan.');
+            }
+
+
+            const cookieHeader = this.generateCookieHeader(cookies, this.cookiesKey);
+
+
+            const shopInfoRequest = {
+                method: 'GET',
+                url: `https://seller.shopee.co.id/api/framework/selleraccount/shop_info/?SPC_CDS=${spcCdsValue}&SPC_CDS_VER=2&_cache_api_sw_v1_=1`,
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                    'Accept': 'application/json, text/plain, */*',
+                    'User-Agent': 'Mozilla/5.0',
+                    'Cookie': cookieHeader,
+                },
+                timeout: 60000,
+            };
+
+            const shopInfoResponse = await axios(shopInfoRequest);
+            return shopInfoResponse.data.data.shop_id
+
+        } catch (error: any) {
+            console.error('Gagal mengambil iklan produk:', error?.message || error);
+            throw new Error(error);
+        }
+    };
+
+    public getProductAdsInfo = async (): Promise<any> => {
+        try {
+            let cookies = await this.getCookies() ?? [];
+
+            if (cookies.length === 0) {
+                throw new Error('Cookie tidak ditemukan.');
+            }
+
+            if (BotEngine.page) {
+                await BotEngine.page.setCookie(...this.sanitizeCookies(cookies));
+            } else {
+                throw new Error('BotEngine.page tidak tersedia.');
+            }
+
+            const spcCookie = cookies.find((cookie: any) => cookie.name === 'SPC_CDS')?.value;
+            if (!spcCookie) {
+                throw new Error('Cookie SPC_CDS tidak ditemukan.');
+            }
+
+            const cookieReqHeader = this.generateCookieHeader(cookies, this.cookiesKey);
+
+            const optionsId = {
+                method: 'GET',
+                url: `https://seller.shopee.co.id/api/framework/selleraccount/shop_info/?SPC_CDS=${spcCookie}&SPC_CDS_VER=2&_cache_api_sw_v1_=1`,
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                    'Accept': 'application/json, text/plain, */*',
+                    'User-Agent': 'Mozilla/5.0',
+                    'Cookie': cookieReqHeader,
+                },
+                timeout: 60000,
+            };
+
+            const resultId = await axios(optionsId);
+            return resultId.data
+        } catch (error: any) {
+            console.error('Gagal mengambil iklan produk:', error?.message || error);
+            throw new Error(error);
+        }
     };
 
     public getProductStock = async (): Promise<any> => {
@@ -159,55 +256,53 @@ class ShopeeSellerRepository {
                 throw new Error('Cookie SPC_CDS tidak ditemukan.');
             }
 
-            const keysToFilter = [
-                "REC_T_ID", "SPC_F", "_gcl_au", "_fbp", "SPC_CLIENTID", "SPC_EC", "SPC_ST",
-                "SPC_SC_SESSION", "SPC_STK", "SC_DFP", "_QPWSDCXHZQA", "REC7iLP4Q", "SPC_U",
-                "SPC_T_IV", "SPC_R_T_ID", "SPC_R_T_IV", "SPC_T_ID", "_ga", "_ga_SW6D8G0HXK",
-                "SPC_CDS", "SPC_SEC_SI", "SPC_SI", "CTOKEN", "SPC_CDS_CHAT", "_sapid",
-                "shopee_webUnique_ccd", "ds"
-            ];
 
-            const cookieHeader = this.generateCookieHeader(cookies, keysToFilter);
+            const cookieHeader = this.generateCookieHeader(cookies, this.cookiesKey);
 
-            const baseHeaders = {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json, text/plain, */*',
-                'User-Agent': 'Mozilla/5.0',
-                'Cookie': cookieHeader,
-            };
-
-            const firstResponse = await axios({
+            // Request pertama untuk mendapatkan total halaman
+            const initialResponse = await axios({
                 method: 'GET',
                 url: `https://seller.shopee.co.id/api/v3/mpsku/list/v2/get_product_list?SPC_CDS=${spcCookie}&SPC_CDS_VER=2&page_number=1&page_size=12&list_type=live_all&need_ads=true`,
-                headers: baseHeaders,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json, text/plain, */*',
+                    'User-Agent': 'Mozilla/5.0',
+                    'Cookie': cookieHeader,
+                },
                 timeout: 60000
             });
 
-            const { page_number, page_size } = firstResponse?.data?.page_info ?? { page_number: 1, page_size: 12 };
+            const total = initialResponse.data.data.page_info.total;
+            const pageSize = initialResponse.data.data.page_info.page_size;
 
-            const stockResponse = await axios({
-                method: 'GET',
-                url: `https://seller.shopee.co.id/api/v3/mpsku/list/v2/get_product_list?SPC_CDS=${spcCookie}&SPC_CDS_VER=2&page_number=${page_number}&page_size=${page_size}&list_type=live_all&need_ads=true`,
-                headers: baseHeaders,
-                timeout: 60000
-            });
+            const totalPages = Math.ceil(total / pageSize);
+            const allProducts: any[] = [];
 
-            const shopInfoResponse = await axios({
-                method: 'GET',
-                url: `https://seller.shopee.co.id/api/framework/selleraccount/shop_info/?SPC_CDS=${spcCookie}&SPC_CDS_VER=2&_cache_api_sw_v1_=1`,
-                headers: baseHeaders,
-                timeout: 60000
-            });
+            for (let page = 1; page <= totalPages; page++) {
+                const response = await axios({
+                    method: 'GET',
+                    url: `https://seller.shopee.co.id/api/v3/mpsku/list/v2/get_product_list?SPC_CDS=${spcCookie}&SPC_CDS_VER=2&page_number=${page}&page_size=${pageSize}&list_type=live_all&need_ads=true`,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json, text/plain, */*',
+                        'User-Agent': 'Mozilla/5.0',
+                        'Cookie': cookieHeader,
+                    },
+                    timeout: 60000
+                });
 
-            console.info('Data stok produk berhasil diambil.');
-            return {
-                shop_id: shopInfoResponse.data?.shop_id,
-                stock_info: stockResponse.data
-            };
+                const products = response.data.data.products;
+                if (Array.isArray(products)) {
+                    allProducts.push(...products);
+                }
+            }
+
+            console.info(`Berhasil mengambil ${allProducts.length} produk dari ${totalPages} halaman.`);
+            return allProducts;
 
         } catch (error: any) {
             console.error('Gagal mengambil data stok produk:', error?.message || error);
-            throw new Error(error);
+            throw new Error(error?.message || 'Unknown error');
         }
     };
 
@@ -231,15 +326,8 @@ class ShopeeSellerRepository {
                 throw new Error('Cookie SPC_CDS tidak ditemukan.');
             }
 
-            const cookieKeys = [
-                "REC_T_ID", "SPC_F", "_gcl_au", "_fbp", "SPC_CLIENTID", "SPC_EC", "SPC_ST",
-                "SPC_SC_SESSION", "SPC_STK", "SC_DFP", "_QPWSDCXHZQA", "REC7iLP4Q", "SPC_U",
-                "SPC_T_IV", "SPC_R_T_ID", "SPC_R_T_IV", "SPC_T_ID", "_ga", "_ga_SW6D8G0HXK",
-                "SPC_CDS", "SPC_SEC_SI", "SPC_SI", "CTOKEN", "SPC_CDS_CHAT", "_sapid",
-                "shopee_webUnique_ccd", "ds"
-            ];
 
-            const cookieHeader = this.generateCookieHeader(cookies, cookieKeys);
+            const cookieHeader = this.generateCookieHeader(cookies, this.cookiesKey);
 
             const productAdsRequest = {
                 method: 'POST',
@@ -266,77 +354,9 @@ class ShopeeSellerRepository {
                 }
             };
 
-            const shopInfoRequest = {
-                method: 'GET',
-                url: `https://seller.shopee.co.id/api/framework/selleraccount/shop_info/?SPC_CDS=${spcCdsValue}&SPC_CDS_VER=2&_cache_api_sw_v1_=1`,
-                headers: {
-                    'Content-Type': 'application/json; charset=utf-8',
-                    'Accept': 'application/json, text/plain, */*',
-                    'User-Agent': 'Mozilla/5.0',
-                    'Cookie': cookieHeader,
-                },
-                timeout: 60000,
-            };
-
             const productAdsResponse = await axios(productAdsRequest);
-            const shopInfoResponse = await axios(shopInfoRequest);
+            return productAdsResponse.data
 
-
-            return {
-                shop_id: shopInfoResponse.data.shop_id,
-                profile_info: productAdsResponse.data
-            };
-
-        } catch (error: any) {
-            console.error('Gagal mengambil iklan produk:', error?.message || error);
-            throw new Error(error);
-        }
-    };
-
-
-    public getProductAdsInfo = async (): Promise<any> => {
-        try {
-            let cookies = await this.getCookies() ?? [];
-
-            if (cookies.length === 0) {
-                throw new Error('Cookie tidak ditemukan.');
-            }
-
-            if (BotEngine.page) {
-                await BotEngine.page.setCookie(...this.sanitizeCookies(cookies));
-            } else {
-                throw new Error('BotEngine.page tidak tersedia.');
-            }
-
-            const spcCookie = cookies.find((cookie: any) => cookie.name === 'SPC_CDS')?.value;
-            if (!spcCookie) {
-                throw new Error('Cookie SPC_CDS tidak ditemukan.');
-            }
-
-            const keysToFilter = [
-                "REC_T_ID", "SPC_F", "_gcl_au", "_fbp", "SPC_CLIENTID", "SPC_EC", "SPC_ST",
-                "SPC_SC_SESSION", "SPC_STK", "SC_DFP", "_QPWSDCXHZQA", "REC7iLP4Q", "SPC_U",
-                "SPC_T_IV", "SPC_R_T_ID", "SPC_R_T_IV", "SPC_T_ID", "_ga", "_ga_SW6D8G0HXK",
-                "SPC_CDS", "SPC_SEC_SI", "SPC_SI", "CTOKEN", "SPC_CDS_CHAT", "_sapid",
-                "shopee_webUnique_ccd", "ds"
-            ];
-
-            const cookieReqHeader = this.generateCookieHeader(cookies, keysToFilter);
-
-            const optionsId = {
-                method: 'GET',
-                url: `https://seller.shopee.co.id/api/framework/selleraccount/shop_info/?SPC_CDS=${spcCookie}&SPC_CDS_VER=2&_cache_api_sw_v1_=1`,
-                headers: {
-                    'Content-Type': 'application/json; charset=utf-8',
-                    'Accept': 'application/json, text/plain, */*',
-                    'User-Agent': 'Mozilla/5.0',
-                    'Cookie': cookieReqHeader,
-                },
-                timeout: 60000,
-            };
-
-            const resultId = await axios(optionsId);
-            return resultId.data
         } catch (error: any) {
             console.error('Gagal mengambil iklan produk:', error?.message || error);
             throw new Error(error);
@@ -345,7 +365,6 @@ class ShopeeSellerRepository {
 
     public getProductKey = async (startTime: any, endTime: any, campaignIdValue: any): Promise<any> => {
         try {
-            console.info('masuk')
             const cookies = await this.getCookies() ?? [];
             if (cookies.length === 0) {
                 throw new Error('Cookie tidak ditemukan.');
@@ -362,50 +381,39 @@ class ShopeeSellerRepository {
                 throw new Error('Cookie SPC_CDS tidak ditemukan.');
             }
 
-            const cookieKeys = [
-                "REC_T_ID", "SPC_F", "_gcl_au", "_fbp", "SPC_CLIENTID", "SPC_EC", "SPC_ST",
-                "SPC_SC_SESSION", "SPC_STK", "SC_DFP", "_QPWSDCXHZQA", "REC7iLP4Q", "SPC_U",
-                "SPC_T_IV", "SPC_R_T_ID", "SPC_R_T_IV", "SPC_T_ID", "_ga", "_ga_SW6D8G0HXK",
-                "SPC_CDS", "SPC_SEC_SI", "SPC_SI", "CTOKEN", "SPC_CDS_CHAT", "_sapid",
-                "shopee_webUnique_ccd", "ds"
-            ];
-
-            const cookieHeader = this.generateCookieHeader(cookies, cookieKeys);
-
+            const cookieHeader = this.generateCookieHeader(cookies, this.cookiesKey);
             const keywordReportRequest = {
                 method: 'POST',
                 url: `https://seller.shopee.co.id/api/pas/v1/report/get/?SPC_CDS=${spcCdsValue}&SPC_CDS_VER=2`,
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json;charset=UTF-8',
                     'Accept': 'application/json, text/plain, */*',
                     'User-Agent': 'Mozilla/5.0',
                     'Cookie': cookieHeader,
+                    'Content-Length': 158,
+                    'Accept-Encoding': 'gzip, deflate, br, zstd',
+                    'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
                 },
                 timeout: 60000,
-                data: {
-                    agg_type: "keyword",
-                    campaign_type: "product",
-                    end_time: endTime,
-                    filter_params: {
-                      campaign_id: campaignIdValue
-                    },
-                    header: {},
-                    need_ratio: true,
-                    start_time: startTime
-                  }
+                data: {"start_time":1747501200,"end_time":1748105999,"campaign_type":"product","agg_type":"new_product_boost","filter_params":{"campaign_id":316755336},"header":{}}
+                // data: {
+                //     agg_type: "new_product_boost",
+                //     campaign_type: "product",
+                //     end_time: endTime,
+                //     filter_params: {
+                //         campaign_id: campaignIdValue
+                //     },
+                //     header: {},
+                //     start_time: startTime
+                // }
             };
-            console.info(keywordReportRequest)
 
             const keywordReportResponse = await axios(keywordReportRequest);
-            console.info('ini', keywordReportRequest)
-            console.info('Kata kunci iklan berhasil diambil:', keywordReportResponse.data);
-            return {
-                campaignId: campaignIdValue,
-                keyword_info: keywordReportResponse.data
-            };
+            return keywordReportResponse.data
 
         } catch (error: any) {
-            console.error('Gagal mengambil kata kunci iklan:', error?.message || error);
+            // console.error('Gagal mengambil kata kunci iklan:', error?.message || error);
+            console.error(error);
             throw new Error(error);
         }
     };
@@ -430,15 +438,8 @@ class ShopeeSellerRepository {
                 throw new Error('Cookie SPC_CDS tidak ditemukan.');
             }
 
-            const cookieKeys = [
-                "REC_T_ID", "SPC_F", "_gcl_au", "_fbp", "SPC_CLIENTID", "SPC_EC", "SPC_ST",
-                "SPC_SC_SESSION", "SPC_STK", "SC_DFP", "_QPWSDCXHZQA", "REC7iLP4Q", "SPC_U",
-                "SPC_T_IV", "SPC_R_T_ID", "SPC_R_T_IV", "SPC_T_ID", "_ga", "_ga_SW6D8G0HXK",
-                "SPC_CDS", "SPC_SEC_SI", "SPC_SI", "CTOKEN", "SPC_CDS_CHAT", "_sapid",
-                "shopee_webUnique_ccd", "ds"
-            ];
 
-            const cookieHeader = this.generateCookieHeader(cookies, cookieKeys);
+            const cookieHeader = this.generateCookieHeader(cookies, this.cookiesKey);
 
             const profileInfoRequest = {
                 method: 'GET',
@@ -452,26 +453,11 @@ class ShopeeSellerRepository {
                 timeout: 60000,
             };
 
-            const shopInfoRequest = {
-                method: 'GET',
-                url: `https://seller.shopee.co.id/api/framework/selleraccount/shop_info/?SPC_CDS=${spcCdsValue}&SPC_CDS_VER=2&_cache_api_sw_v1_=1`,
-                headers: {
-                    'Content-Type': 'application/json; charset=utf-8',
-                    'Accept': 'application/json, text/plain, */*',
-                    'User-Agent': 'Mozilla/5.0',
-                    'Cookie': cookieHeader,
-                },
-                timeout: 60000,
-            };
 
             const profileInfoResponse = await axios(profileInfoRequest);
-            const shopInfoResponse = await axios(shopInfoRequest);
 
             console.info('Informasi pengguna berhasil diambil:');
-            return {
-                shop_info: shopInfoResponse.data,
-                profile_info: profileInfoResponse.data
-            };
+            return profileInfoResponse.data
 
         } catch (error: any) {
             console.error('Gagal mengambil informasi pengguna:', error?.message || error);
@@ -480,108 +466,69 @@ class ShopeeSellerRepository {
     }
 
 
-    public getProductPerformance = async (startTime: any, endTime: any): Promise<any> => {
+    public getProductPerformance = async (startTime: any, endTime: any): Promise<any[]> => {
         try {
             const cookies = await this.getCookies() ?? [];
-
-            if (cookies.length === 0) {
-                throw new Error('Tidak ditemukan cookie.');
-            }
-
-            if (!BotEngine.page) {
-                throw new Error('BotEngine.page tidak terdefinisi.');
-            }
+            if (cookies.length === 0) throw new Error('Tidak ditemukan cookie.');
+            if (!BotEngine.page) throw new Error('BotEngine.page tidak terdefinisi.');
 
             await BotEngine.page.setCookie(...this.sanitizeCookies(cookies));
 
             const spcCdsValue = cookies.find((cookie: any) => cookie.name === 'SPC_CDS')?.value;
-            if (!spcCdsValue) {
-                throw new Error('Cookie SPC_CDS tidak ditemukan.');
+            if (!spcCdsValue) throw new Error('Cookie SPC_CDS tidak ditemukan.');
+
+    
+            const cookieHeader = this.generateCookieHeader(cookies, this.cookiesKey);
+
+            const pageSize = 50;
+            let allItems: any[] = [];
+
+            // Request halaman pertama untuk ambil total
+            const firstResponse = await axios({
+                method: 'GET',
+                url: `https://seller.shopee.co.id/api/mydata/v3/product/performance/?SPC_CDS=${spcCdsValue}&SPC_CDS_VER=2&start_time=${startTime}&end_time=${endTime}&period=real_time&metric_ids=all&order_by=placed_units.desc&page_size=${pageSize}&page_num=1&category_type=shopee&category_id=-1&keyword=`,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json, text/plain, */*',
+                    'User-Agent': 'Mozilla/5.0 ...',
+                    'Cookie': cookieHeader,
+                },
+                timeout: 60000
+            });
+
+            const totalItems = firstResponse.data?.result?.total ?? 0;
+            const totalPages = Math.ceil(totalItems / pageSize);
+
+            // Gabung hasil halaman pertama
+            allItems.push(...(firstResponse.data?.result?.items ?? []));
+
+            // Loop halaman selanjutnya (mulai dari page 2)
+            for (let pageNum = 2; pageNum <= totalPages; pageNum++) {
+                const response = await axios({
+                    method: 'GET',
+                    url: `https://seller.shopee.co.id/api/mydata/v3/product/performance/?SPC_CDS=${spcCdsValue}&SPC_CDS_VER=2&start_time=${startTime}&end_time=${endTime}&period=real_time&metric_ids=all&order_by=placed_units.desc&page_size=${pageSize}&page_num=${pageNum}&category_type=shopee&category_id=-1&keyword=`,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json, text/plain, */*',
+                        'User-Agent': 'Mozilla/5.0 ...',
+                        'Cookie': cookieHeader,
+                    },
+                    timeout: 60000
+                });
+
+                const items = response.data?.result?.items ?? [];
+                allItems.push(...items);
             }
 
-            const cookieKeys = [
-                "REC_T_ID", "SPC_F", "_gcl_au", "_fbp", "SPC_CLIENTID", "SPC_EC", "SPC_ST",
-                "SPC_SC_SESSION", "SPC_STK", "SC_DFP", "_QPWSDCXHZQA", "REC7iLP4Q", "SPC_U",
-                "SPC_T_IV", "SPC_R_T_ID", "SPC_R_T_IV", "SPC_T_ID", "_ga", "_ga_SW6D8G0HXK",
-                "SPC_CDS", "SPC_SEC_SI", "SPC_SI", "CTOKEN", "SPC_CDS_CHAT", "_sapid",
-                "shopee_webUnique_ccd", "ds"
-            ];
-
-            const cookieHeader = this.generateCookieHeader(cookies, cookieKeys);
-
-            const previewRequestOptions = {
-                method: 'GET',
-                url: `https://seller.shopee.co.id/api/mydata/v3/product/performance/?SPC_CDS=${spcCdsValue}&SPC_CDS_VER=2&start_time=${startTime}&end_time=${endTime}&period=real_time&metric_ids=all&order_by=placed_units.desc&page_size=20&page_num=1&category_type=shopee&category_id=-1&keyword=`,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json, text/plain, */*',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                    'Cookie': cookieHeader,
-                },
-                timeout: 60000,
-                data: {
-                    SPC_CDS: spcCdsValue,
-                    SPC_CDS_VER: 2,
-                    page_number: 1,
-                    page_size: 20,
-                    start_time: parseInt(String(startTime)),
-                    end_time: parseInt(String(endTime))
-                }
-            };
-
-            const previewResponse = await axios(previewRequestOptions);
-            console.log('Respons API awal berhasil diambil:', JSON.stringify(previewResponse.data, null, 2));
-
-            const currentPage = previewResponse?.data?.page_info?.page_number;
-            const currentPageSize = previewResponse?.data?.page_info?.page_size;
-
-            const finalRequestOptions = {
-                method: 'GET',
-                url: `https://seller.shopee.co.id/api/mydata/v3/product/performance/?SPC_CDS=${spcCdsValue}&SPC_CDS_VER=2&start_time=${startTime}&end_time=${endTime}&period=real_time&metric_ids=all&order_by=placed_units.desc&page_size=${currentPageSize}&page_num=${currentPage}&category_type=shopee&category_id=-1&keyword=`,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json, text/plain, */*',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                    'Cookie': cookieHeader,
-                },
-                timeout: 60000,
-                data: {
-                    page_number: currentPage,
-                    page_size: currentPageSize,
-                    SPC_CDS: spcCdsValue,
-                    SPC_CDS_VER: 2,
-                    start_time: parseInt(String(startTime)),
-                    end_time: parseInt(String(endTime))
-                }
-            };
-
-            const shopInfoRequest = {
-                method: 'GET',
-                url: `https://seller.shopee.co.id/api/framework/selleraccount/shop_info/?SPC_CDS=${spcCdsValue}&SPC_CDS_VER=2&_cache_api_sw_v1_=1`,
-                headers: {
-                    'Content-Type': 'application/json; charset=utf-8',
-                    'Accept': 'application/json, text/plain, */*',
-                    'User-Agent': 'Mozilla/5.0',
-                    'Cookie': cookieHeader,
-                },
-                timeout: 60000,
-            };
-
-            const finalResponse = await axios(previewRequestOptions);
-            const shopInfoResponse = await axios(shopInfoRequest);
-
-            console.info('Data iklan produk berhasil diambil:', finalResponse);
-
-            return {
-                shop_info: shopInfoResponse.data,
-                product_performance: finalResponse.data
-            };
+            console.info(`Berhasil mengambil ${allItems.length} produk dari total ${totalItems}`);
+            return allItems;
 
         } catch (error: any) {
-            console.error('Terjadi kesalahan saat mengambil data iklan produk:', error?.message || error);
+            console.error('Gagal mengambil semua data performa produk:', error?.message || error);
             throw new Error(error);
         }
     };
+
 }
 
 export default ShopeeSellerRepository;

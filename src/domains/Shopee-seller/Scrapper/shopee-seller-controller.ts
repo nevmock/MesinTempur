@@ -28,7 +28,7 @@ class ShopeeSellerController {
     };
 
     // Scrape iklan produk daily
-    public productAdsScrapeDaily = async (res: Response): Promise<Response> => {
+    public productAdsScrapeDaily = async (req: Request, res: Response): Promise<any> => {
         try {
             const entryList = await this.service.getProductAdsDaily();
             

@@ -3,8 +3,8 @@ GET http://localhost:1337/api/v1/shopee-seller/product-ads
 Content-Type: application/json
 
 {
-    "startDefault": "1744909200",
-    "endDefault": "1744995599"
+    "startDefault": "1747414800",
+    "endDefault": "1748019599"
 }
 
 ### SHOPEE ADS DAILY
@@ -25,9 +25,9 @@ GET http://localhost:1337/api/v1/shopee-seller/product-keyword
 Content-Type: application/json
 
 {
-    "startDefault": "1746464400",
-    "endDefault": "1746550799",
-    "campaignId": "314012238"
+    "startDefault": "1748019600",
+    "endDefault": "1748105999",
+    "campaignId": "316755336"
 }
 
 ### PRODUCT PERFORMANCE
@@ -35,8 +35,8 @@ GET http://localhost:1337/api/v1/shopee-seller/product-performance
 Content-Type: application/json
 
 {
-    "startDefault": "1744909200",
-    "endDefault": "1744995599"
+    "startDefault": "1747328400",
+    "endDefault": "1747933199"
 }
 
 ### AUTO LOGIN

@@ -42,14 +42,14 @@ class BotEngine implements IBotEngine {
          // }
 
          BotEngine.browser = await puppeteer.launch({
-            headless: false,
-            executablePath: 'C:/Users/unomi/AppData/Local/Chromium/Application/chrome.exe',
-            userDataDir: 'C:/Users/unomi/AppData/Local/Google/Chrome/User Data',
+            headless: true,
+            // executablePath: 'C:/Users/unomi/AppData/Local/Chromium/Application/chrome.exe',
+            // userDataDir: 'C:/Users/unomi/AppData/Local/Google/Chrome/User Data',
             // ignoreDefaultArgs: ['--disable-extensions'],
             args: [
                // '--use-gl=egl',
                // '--no-sandbox',
-               '--profile-directory=Default',
+               // '--profile-directory=Default',
                // '--disable-setuid-sandbox',
                // 'google-chrome-stable',
                // '--force-device-scale-factor=0.5',
@@ -148,7 +148,7 @@ class BotEngine implements IBotEngine {
             const cookiesArr = jsonfile.readFileSync(this.getSessionsPath(hasSessionOption));
 
             // JSON.parse(JSON.stringify(cookiesArr));
-
+            console.info(BotEngine.page)
             if (cookiesArr.length !== 0) {
                for (let cookie of cookiesArr) {
                   await BotEngine.page?.setCookie(cookie);
@@ -156,6 +156,7 @@ class BotEngine implements IBotEngine {
                loggerUtils.logWithFile(
                   'Session file has been loaded in the browser',
                );
+               
                return true;
             }
          }
