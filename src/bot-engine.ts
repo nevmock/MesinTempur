@@ -134,7 +134,7 @@ class BotEngine implements IBotEngine {
       }
    };
 
-   public static hasSession = async (hasSessionOption: THasSessionOption): Promise<boolean> => {
+   public static hasSession = async (hasSessionOption: THasSessionOption): Promise<any> => {
       try {
          loggerUtils.logWithFile(
             `Get sessions file : ${this.getSessionsPath(hasSessionOption)}`,
@@ -148,21 +148,24 @@ class BotEngine implements IBotEngine {
             const cookiesArr = jsonfile.readFileSync(this.getSessionsPath(hasSessionOption));
 
             // JSON.parse(JSON.stringify(cookiesArr));
-            console.info(BotEngine.page)
+            // console.info(BotEngine.page)
             if (cookiesArr.length !== 0) {
                for (let cookie of cookiesArr) {
-                  await BotEngine.page?.setCookie(cookie);
+                  await this.browser?.setCookie(cookie).then(() => {
+                     // console.info('COOKIES SETTT')
+                  }).catch((e) => {
+                     console.info(e)
+                  });
                }
                loggerUtils.logWithFile(
                   'Session file has been loaded in the browser',
                );
-               
                return true;
             }
+         } else {
+            loggerUtils.logWithFile(`Session file doesn't exist`);
+            return false;
          }
-
-         loggerUtils.logWithFile(`Session file doesn't exist`);
-         return false;
       } catch (error: any) {
          loggerUtils.logger().error(`${error} from session`);
          return false;

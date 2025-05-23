@@ -205,6 +205,7 @@ class ShopeeSellerScrapperServices {
             }
 
             const isSessionAvailable = await BotEngine.hasSession({ platform, botAccountIndex });
+            console.info(isSessionAvailable)
             if (isSessionAvailable) {
                 // await BotEngine.page?.goto(keywordUrl, { waitUntil: 'load' });
                 console.info("session avail")
@@ -216,20 +217,22 @@ class ShopeeSellerScrapperServices {
             console.log(`🔍 Mengambil data keyword dari: ${startDate} hingga: ${endDate}, ID kampanye: ${campaignId}`);
 
             const keywordData = await this.sellerRepository.getProductKey(startDate, endDate, campaignId);
+            console.info(keywordData)
             const { client, db } = await connectDB();
             const keywordCollection = db.collection("ProductKey");
 
-            await keywordCollection.insertOne({
-                uuid: "123e4567-e89b-12d3-a456-426614174000",
-                createdAt: new Date(),
-                from: startDate,
-                to: endDate,
-                campaign_id: campaignId,
-                data: keywordData,
-            });
-
-            console.info("✅ Data keyword iklan berhasil disimpan ke MongoDB");
+            // await keywordCollection.insertOne({
+            //     uuid: "123e4567-e89b-12d3-a456-426614174000",
+            //     createdAt: new Date(),
+            //     from: startDate,
+            //     to: endDate,
+            //     campaign_id: campaignId,
+            //     data: keywordData,
+            // });
+            //
+            // console.info("✅ Data keyword iklan berhasil disimpan ke MongoDB");
             return keywordData;
+            // return null;
         } catch (error) {
             console.error(error)
             // console.error('❌ Terjadi kesalahan saat memproses data keyword iklan produk:', error);

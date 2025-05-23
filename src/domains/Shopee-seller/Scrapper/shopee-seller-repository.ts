@@ -382,30 +382,57 @@ class ShopeeSellerRepository {
             }
 
             const cookieHeader = this.generateCookieHeader(cookies, this.cookiesKey);
+            // const keywordReportRequest = {
+            //     method: 'POST',
+            //     url: `https://seller.shopee.co.id/api/pas/v1/report/get/?SPC_CDS=${spcCdsValue}&SPC_CDS_VER=2`,
+            //     headers: {
+            //         'Content-Type': 'application/json;charset=UTF-8',
+            //         'Accept': 'application/json, text/plain, */*',
+            //         'User-Agent': 'Mozilla/5.0',
+            //         'Cookie': cookieHeader,
+            //         'Content-Length': 158,
+            //         'Accept-Encoding': 'gzip, deflate, br, zstd',
+            //         'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+            //     },
+            //     timeout: 60000,
+            //     data: {"start_time":1747501200,"end_time":1748105999,"campaign_type":"product","agg_type":"new_product_boost","filter_params":{"campaign_id":316755336},"header":{}}
+            // };
+
             const keywordReportRequest = {
                 method: 'POST',
                 url: `https://seller.shopee.co.id/api/pas/v1/report/get/?SPC_CDS=${spcCdsValue}&SPC_CDS_VER=2`,
                 headers: {
                     'Content-Type': 'application/json;charset=UTF-8',
                     'Accept': 'application/json, text/plain, */*',
-                    'User-Agent': 'Mozilla/5.0',
-                    'Cookie': cookieHeader,
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+                    'Cookie': 'SPC_SC_SA_TK=; SPC_SC_SA_UD=; REC_T_ID=4c1484fa-e3c8-11ef-bbec-9ad163857bc6; SPC_F=IY7GzDi9FEw4lWnyRX31zV4Q9gktofmG; _fbp=fb.2.1738763489092.17180720863568830; SPC_CLIENTID=SVk3R3pEaTlGRXc0ogqknsydekmfnrpf; SC_DFP=kOwbJshlfDmSpGJtccCAFWtFnzgBeOJE; _QPWSDCXHZQA=93e8a074-d122-4d1b-8573-a0d7b2ba2384; REC7iLP4Q=7a2306e3-deba-4e42-9d3d-81b2ccb6245d; SPC_CDS_CHAT=46487d2a-47c8-4184-b5fd-4653ee3c39e7; _gcl_gs=2.1.k1$i1740382820$u245648710; _gcl_aw=GCL.1740382823.Cj0KCQiAq-u9BhCjARIsANLj-s1_GxG6WZiUFmsJr4sCsKJ-smYKo-3Qgh5M7ljsgpB-5VnG-pVh_qEaAlTyEALw_wcB; _gac_UA-61904553-8=1.1740382823.Cj0KCQiAq-u9BhCjARIsANLj-s1_GxG6WZiUFmsJr4sCsKJ-smYKo-3Qgh5M7ljsgpB-5VnG-pVh_qEaAlTyEALw_wcB; _ga_PN56VNNPQX=GS1.3.1740995273.1.0.1740995273.0.0.0; _ga_QMX630BLLS=GS1.1.1741222690.1.0.1741222690.60.0.0; fulfillment-language=id; _gcl_au=1.1.1502643919.1746859156; SPC_CDS=d0cb8505-c446-4300-948b-319d7fb17613; _sapid=ca946380b81bcfe7cfc9af82c692d5788c69243f5f75bbac3996539a; SPC_U=-; SPC_EC=-; SPC_R_T_ID=Sbyh2ShrZ85YwKndQuh4cxuoy4VuU15l1fkR9qCLUoNU3CaktexnYyprhDSZzHVooYM19IGCjie90l3C35mYfI0uKDucCuCpg7oJzkFTisH7UZMuhrCkaru8J2Nq0Cv3d6UHwUOsVRnS9tN3jtbwZpb8xlYtgT2vUAO7B8N1efQ=; SPC_R_T_IV=cWxyaTZlOGtiMExmRjFTUw==; SPC_T_ID=Sbyh2ShrZ85YwKndQuh4cxuoy4VuU15l1fkR9qCLUoNU3CaktexnYyprhDSZzHVooYM19IGCjie90l3C35mYfI0uKDucCuCpg7oJzkFTisH7UZMuhrCkaru8J2Nq0Cv3d6UHwUOsVRnS9tN3jtbwZpb8xlYtgT2vUAO7B8N1efQ=; SPC_T_IV=cWxyaTZlOGtiMExmRjFTUw==; SPC_SI=kZUuaAAAAABxclY4c01nOXACeAAAAAAAMjZHbkNEaGw=; AMP_TOKEN=%24NOT_FOUND; _gid=GA1.3.783363592.1748027372; SPC_SI=kZUuaAAAAABxclY4c01nOXACeAAAAAAAMjZHbkNEaGw=; SPC_SEC_SI=v1-RmxGMGQyUE01Qlk5MUl6SXU7klEuV2N9xxB+7O/t95EkC5IPStml/d2RHS9nb1v53Ic2mQHD8NZ/uHzoV24bjda3UPzF8gZQuvun+DI50TY=; _ga=GA1.1.2004969604.1738763489; _ga_SW6D8G0HXK=GS2.1.s1748027373$o41$g0$t1748027378$j55$l0$h0$dvd7Dt5dBNtMdOBbMgArkFnQ7nXlKzP8pOg; SPC_SC_SESSION=g57J0aEvpwdiStmCerl6EKYsnLnFQa0I2iEsCFnbFdgSwk7PcZAyHgGWjKsDw87hLLX66BSBoU7lfSog/qax1R1EGb2chFdrqkGzlsSWtNIXF/9gQb7PJEMYra/azSk2Ho7t1oPE5qg5QmG1vqmWbTqr623kDL0eRWsfNjbdKLiORyKqNuckrl+ii2FA7NVS8/AdVPpYmzRjXRGWrwiOraqZ4/qX0N5lMVY9ycUVI7RmDgXHy7Z+RRiad5ZCF+4KkH+aA6jLApE2pJ4Xx4iha3sKSgoBZbMJcpTa9crQJbgy9OefrFyn2nou7V83QtfNqN1j2AKmA6zyG+F38UnKrHWUaexl0pkxMsUUtM0rCKygF9XS86NzlBr2cMSVUBhzFIUcJeqgB/HDOBEeDuvw0IF9y6kpqKhMMtIEf3LUl5AQ=_2_2095441; SC_SSO=ZlQ1UDhPelczblNWZXRJUJoVzHpIgkW9DUfg8sOFjcE+xQFPN3szolynB025fJKm; SC_SSO_U=2095441; SPC_STK=mVnenP3kMhUIFNe36xvKcoJUbJVzqP9EQEOictIoOXK9ztK9Lznk+QxCXkpjOxSf7LvkNXMRsJK95Qvn/hMbTA4L5w7gkOXbM4xTGpYA4Iht0MvBsN05ylVeLvfipdJnYBk5SEsfBBCemwEyjGzH8ecFyOsKGtohZRAiuOzZ3U9qQYhGqjrODNlNVau8CzKtM39tthaT29ujW1DwuQIivWaBln7s6xuL5+Rup/8sX8RGb29W4K+XCFbfvOXxB/5Ba5qa7kpyOvhDsacpjUSyfzoMT946PhP8Mq5xC/QuXryAl5DisBE1VtArlecN4gWeV+7bY31SFV85/3iqiWkuaabjK+wWx0njm8pZKVqvZOdD5FeiOhns55i0qtwqGik9bswXHBgziRkMGW6jqu+Y5DhDC/vqaK2bEju+13/yzbByQ4yLNJANP+NPCSHhb12i4JTJhrfED+1sOFeXfOUZS/4jKhRX0ciJ8ay1GBQuqxqpD15IDG4xWSye1rB6vSORM3bQ8t+vvDdx9g1qZHwjIqzjuDS7ueoClP+scVfLzaqQTWHgRlvmgUMp5qkv4U+o0f8hXqGJTX0PMMVTmVQrEvypDdxuDK421nOfR5+4Kqucy1BNjx1PNFdJpALYlBiXucsQfickK1BE8jxy6B7OQbph3r7qoWFvd8Lkz3BJOwEScDjoqOdjxSCQl9JjKuldxQaoh3R+8IusmBAd84MS0w==; SPC_SC_OFFLINE_TOKEN=eyJkYXRhIjoiRDltQnBNcGd5UlN1SmkwOXE2YkE1V05SWmhSNzE0TEdXaTRmejJlY3JRMGR3T2xJazVXMlR5cWNsUS9wdjFPS3A1VVFqNUZsVnREMzFmTHdnbXZML3FHU0owVEhwaGNWSlhCY3phWm12ZmVJeXVBUmtwOXZEdFg0NDdkdlJLclh0UDlwN1NGVDFBemR1UEdDN25hZUxuQ1F1d0VuT1lxcjhWZ0R6WVRiTXZnOFJpb1I0U1MxaENQMmNqNWk3OVBqa3ZaSUhFZjh4czhqdjZKY2RHSXJDQT09IiwiaXYiOiJyVENGNVZNWEp3NmhRU0RvQmJBa3NnPT0iLCJzaWduIjoiYVBtNW5iSnl3K21taG4wSnpPZkZOSTgydGpnYzhDNmRZMVkxNzBOall2K3kzMUhFc1NiaXlvSHhDam9JQ1AvYkd2dGwxWlpHMTVpZHl2Z1FKZnpwQmc9PSJ9; CTOKEN=GyQ%2FyTgREfC%2BO34UJQDouQ%3D%3D; shopee_webUnique_ccd=HsdbcbUl0LThaC9szgwI1g%3D%3D%7C9gEiEgyDkcd7XhXrQM1AAG%2FApgQzS%2FHathAS%2B8h0jDDhz1Cv1liyJkGcJag1CCjoToPoS2Oa4XXWy4vvPdU%3D%7CYk8IQ%2BpcvUYiR%2BiO%7C08%7C3; ds=41092852defcf9b3f06fcc3cb21a644f',
                     'Content-Length': 158,
                     'Accept-Encoding': 'gzip, deflate, br, zstd',
                     'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+                    'DNT': '1',
+                    'Origin': 'https://seller.shopee.co.id',
+                    'Priority': 'u=1, i',
+                    'Referer': 'https://seller.shopee.co.id/portal/marketing/pas/product/manual/314023638?from=1747501200&to=1748105999&group=last_week',
+                    'sc-fe-session': 'FB08B866057A8C6C',
+                    'sc-fe-ver': '21.99342',
+                    'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
+                    'sec-ch-ua-mobile': '?0',
+                    'sec-ch-ua-platform': '"macOS"',
+                    'sec-fetch-dest': 'empty',
+                    'sec-fetch-mode': 'cors',
+                    'sec-fetch-site': 'same-origin'
                 },
                 timeout: 60000,
-                data: {"start_time":1747501200,"end_time":1748105999,"campaign_type":"product","agg_type":"new_product_boost","filter_params":{"campaign_id":316755336},"header":{}}
-                // data: {
-                //     agg_type: "new_product_boost",
-                //     campaign_type: "product",
-                //     end_time: endTime,
-                //     filter_params: {
-                //         campaign_id: campaignIdValue
-                //     },
-                //     header: {},
-                //     start_time: startTime
-                // }
+                data: {
+                    "start_time": 1747501200,
+                    "end_time": 1748105999,
+                    "campaign_type": "product",
+                    "agg_type": "new_product_boost",
+                    "filter_params": {
+                        "campaign_id": 316755336
+                    },
+                    "header": {}
+                }
             };
 
             const keywordReportResponse = await axios(keywordReportRequest);
