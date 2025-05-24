@@ -25,9 +25,8 @@ GET http://localhost:1337/api/v1/shopee-seller/product-keyword
 Content-Type: application/json
 
 {
-    "startDefault": "1748019600",
-    "endDefault": "1748105999",
-    "campaignId": "316755336"
+    "startDefault": "1747414800",
+    "endDefault": "1748019599"
 }
 
 ### PRODUCT PERFORMANCE

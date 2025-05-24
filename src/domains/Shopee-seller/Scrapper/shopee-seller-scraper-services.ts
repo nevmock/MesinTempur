@@ -189,102 +189,174 @@ class ShopeeSellerScrapperServices {
     };
 
 
+    // public getProductKey1 = async (startDate: string, endDate: string, campaignId: string): Promise<any> => {
+    //     try {
+    //         const { client, db } = await connectDB();
+    //         //tambah disini
+    //         const botAccountIndex = 0;
+    //         const platform = 'shopee_seller';
+    //         const keywordUrl = `https://seller.shopee.co.id/portal/marketing/pas/product/manual/${campaignId}?from=${startDate}&to=${endDate}&group=last_week`;
+
+
+    //         const url = new URL(keywordUrl);
+    //         const fromTimestamp = Number(url.searchParams.get('from'));
+    //         const toTimestamp = Number(url.searchParams.get('to'));
+
+    //         if (isNaN(fromTimestamp) || isNaN(toTimestamp)) {
+    //             throw new Error('Parameter "from" atau "to" pada URL tidak valid');
+    //         }
+
+    //         const isSessionAvailable = await BotEngine.hasSession({ platform, botAccountIndex });
+    //         console.info(isSessionAvailable)
+    //         if (isSessionAvailable) {
+    //             console.info("session avail")
+    //         } else {
+    //             console.info("Session not avail")
+    //         }
+
+    //         console.log(`🔍 Mengambil data keyword dari: ${startDate} hingga: ${endDate}, ID kampanye: ${campaignId}`);
+
+    //         const keywordData = await this.sellerRepository.getProductKey(startDate, endDate, campaignId);
+    //         console.info(keywordData)
+    //         const keywordCollection = db.collection("ProductKey");
+
+    //         await keywordCollection.insertOne({
+    //             uuid: "123e4567-e89b-12d3-a456-426614174000",
+    //             createdAt: new Date(),
+    //             from: startDate,
+    //             to: endDate,
+    //             campaign_id: campaignId,
+    //             data: keywordData,
+    //         });
+            
+    //         console.info("✅ Data keyword iklan berhasil disimpan ke MongoDB");
+    //         return keywordData;
+    //         // return null;
+    //     } catch (error) {
+    //         console.error(error)
+    //         // console.error('❌ Terjadi kesalahan saat memproses data keyword iklan produk:', error);
+    //         return null;
+    //     } finally {
+    //         await closeDB();
+    //     }
+    // };
+
     public getProductKey = async (startDate: string, endDate: string, campaignId: string): Promise<any> => {
-        try {
-            const botAccountIndex = 0;
-            const platform = 'shopee_seller';
-            const keywordUrl = `https://seller.shopee.co.id/portal/marketing/pas/product/manual/${campaignId}?from=${startDate}&to=${endDate}&group=last_week`;
+    try {
+        const { client, db } = await connectDB();
+        const botAccountIndex = 0;
+        const platform = 'shopee_seller';
 
+        const fromStr = String(startDate);
+        const toStr = String(endDate);
 
-            const url = new URL(keywordUrl);
-            const fromTimestamp = Number(url.searchParams.get('from'));
-            const toTimestamp = Number(url.searchParams.get('to'));
+        const isSessionAvailable = await BotEngine.hasSession({ platform, botAccountIndex });
+        console.info(`Session available: ${isSessionAvailable}`);
 
-            if (isNaN(fromTimestamp) || isNaN(toTimestamp)) {
-                throw new Error('Parameter "from" atau "to" pada URL tidak valid');
-            }
+        const productAdsCollection = db.collection("ProductAds");
 
-            const isSessionAvailable = await BotEngine.hasSession({ platform, botAccountIndex });
-            console.info(isSessionAvailable)
-            if (isSessionAvailable) {
-                // await BotEngine.page?.goto(keywordUrl, { waitUntil: 'load' });
-                console.info("session avail")
-                await delay(5000);
-            } else {
-                console.info("Session not avail")
-            }
+        const query = {
+            from: fromStr,
+            to: toStr,
+            "profile_info.data.entry_list.campaign.campaign_id": { $exists: true },
+            "profile_info.data.entry_list.type": { $exists: true }
+        };
 
-            console.log(`🔍 Mengambil data keyword dari: ${startDate} hingga: ${endDate}, ID kampanye: ${campaignId}`);
+        const productAdsDocs = await productAdsCollection.find(query).toArray();
+        console.info(productAdsDocs[0]); // Optional: log data pertama untuk validasi struktur
 
-            const keywordData = await this.sellerRepository.getProductKey(startDate, endDate, campaignId);
-            console.info(keywordData)
-            const { client, db } = await connectDB();
-            const keywordCollection = db.collection("ProductKey");
-
-            // await keywordCollection.insertOne({
-            //     uuid: "123e4567-e89b-12d3-a456-426614174000",
-            //     createdAt: new Date(),
-            //     from: startDate,
-            //     to: endDate,
-            //     campaign_id: campaignId,
-            //     data: keywordData,
-            // });
-            //
-            // console.info("✅ Data keyword iklan berhasil disimpan ke MongoDB");
-            return keywordData;
-            // return null;
-        } catch (error) {
-            console.error(error)
-            // console.error('❌ Terjadi kesalahan saat memproses data keyword iklan produk:', error);
+        if (productAdsDocs.length === 0) {
+            console.warn("⚠️ Tidak ditemukan data campaign_id di collection ProductAds untuk rentang waktu tersebut");
             return null;
-        } finally {
-            await closeDB();
         }
-    };
 
-    public getProductKeyDaily = async (campaignId: string): Promise<any> => {
-        try {
-            const startDate = await this.sellerRepository.getYesterdayStartEpoch
-            const endDate = await this.sellerRepository.getYesterdayEndEpoch
-            const keywordUrl = `https://seller.shopee.co.id/portal/marketing/pas/product/manual/${campaignId}?from=${startDate}&to=${endDate}&group=today`;
+        const keywordCollection = db.collection("ProductKey");
 
-            await BotEngine.page?.goto(keywordUrl, { waitUntil: 'load' });
+        for (const doc of productAdsDocs) {
+            const entries = doc.profile_info?.data?.entry_list || [];
+            
+            for (const entry of entries) {
+                const campaignIdObj = entry?.campaign?.campaign_id;
+                const type = entry?.type;
 
-            const botAccountIndex = 0;
-            const platform = 'shopee_seller';
-            const url = new URL(keywordUrl);
-
-            const isSessionAvailable = await BotEngine.hasSession({ platform, botAccountIndex });
-            if (isSessionAvailable) {
+                if (!campaignIdObj || !type) continue;
+                const keywordUrl = `https://seller.shopee.co.id/portal/marketing/pas/product/manual/${campaignIdObj}?from=${fromStr}&to=${toStr}&group=last_week`;
                 await BotEngine.page?.goto(keywordUrl, { waitUntil: 'load' });
-                await delay(5000);
+
+
+                console.log(`🔍 Mengambil data keyword untuk campaign_id: ${campaignIdObj}, type: ${type}`);
+
+                const keywordData = await this.sellerRepository.getProductKey(fromStr, toStr, campaignIdObj, type);
+
+                await keywordCollection.insertOne({
+                    uuid: "123e4567-e89b-12d3-a456-426614174000", // bisa diubah jadi UUID dinamis
+                    createdAt: new Date(),
+                    from: fromStr,
+                    to: toStr,
+                    campaign_id: campaignIdObj,
+                    type: type,
+                    data: keywordData,
+                });
+
+                console.info(`✅ Data keyword campaign_id ${campaignIdObj} (type: ${type}) berhasil disimpan`);
             }
-
-            console.log(`🔍 Mengambil data keyword dari: ${startDate} hingga: ${endDate}, ID kampanye: ${campaignId}`);
-
-            const keywordData = await this.sellerRepository.getProductKey(startDate, endDate, campaignId);
-
-            const { client, db } = await connectDB();
-            const keywordCollection = db.collection("ProductKey");
-
-            await keywordCollection.insertOne({
-                uuid: "123e4567-e89b-12d3-a456-426614174000",
-                createdAt: new Date(),
-                from: startDate,
-                to: endDate,
-                campaign_id: campaignId,
-                data: keywordData,
-            });
-
-            console.info("✅ Data keyword iklan berhasil disimpan ke MongoDB");
-            return keywordData;
-        } catch (error) {
-            console.error('❌ Terjadi kesalahan saat memproses data keyword iklan produk:', error);
-            return null;
-        } finally {
-            await closeDB();
         }
-    };
+
+        return { message: "Semua data keyword berhasil disimpan" };
+    } catch (error) {
+        console.error("❌ Terjadi kesalahan:", error);
+        return null;
+    } finally {
+        await closeDB();
+    }
+};
+
+
+
+
+    // public getProductKeyDaily = async (campaignId: string): Promise<any> => {
+    //     try {
+    //         const startDate = await this.sellerRepository.getYesterdayStartEpoch
+    //         const endDate = await this.sellerRepository.getYesterdayEndEpoch
+    //         const keywordUrl = `https://seller.shopee.co.id/portal/marketing/pas/product/manual/${campaignId}?from=${startDate}&to=${endDate}&group=today`;
+
+    //         await BotEngine.page?.goto(keywordUrl, { waitUntil: 'load' });
+
+    //         const botAccountIndex = 0;
+    //         const platform = 'shopee_seller';
+    //         const url = new URL(keywordUrl);
+
+    //         const isSessionAvailable = await BotEngine.hasSession({ platform, botAccountIndex });
+    //         if (isSessionAvailable) {
+    //             await BotEngine.page?.goto(keywordUrl, { waitUntil: 'load' });
+    //             await delay(5000);
+    //         }
+
+    //         console.log(`🔍 Mengambil data keyword dari: ${startDate} hingga: ${endDate}, ID kampanye: ${campaignId}`);
+
+    //         const keywordData = await this.sellerRepository.getProductKey(startDate, endDate, campaignId);
+
+    //         const { client, db } = await connectDB();
+    //         const keywordCollection = db.collection("ProductKey");
+
+    //         await keywordCollection.insertOne({
+    //             uuid: "123e4567-e89b-12d3-a456-426614174000",
+    //             createdAt: new Date(),
+    //             from: startDate,
+    //             to: endDate,
+    //             campaign_id: campaignId,
+    //             data: keywordData,
+    //         });
+
+    //         console.info("✅ Data keyword iklan berhasil disimpan ke MongoDB");
+    //         return keywordData;
+    //     } catch (error) {
+    //         console.error('❌ Terjadi kesalahan saat memproses data keyword iklan produk:', error);
+    //         return null;
+    //     } finally {
+    //         await closeDB();
+    //     }
+    // };
 
     public getProductPerformance = async (startDate: string, endDate: any): Promise<any> => {
         try {
